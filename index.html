@@ -747,8 +747,10 @@ async function hybridRealFace(aiUrl,shotUrl){
   const reg=ctx.getImageData(rx0,ry0,rw,rh);const d=reg.data;
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
-   if(rC&&d[i+1]>m*1.02&&d[i+1]>110&&d[i+1]>d[i+2]+15){
-    d[i]=d[i]*0.25+rC.r*0.75;d[i+1]=d[i+1]*0.25+rC.g*0.75;d[i+2]=d[i+2]*0.25+rC.b*0.75;
+   const mb=Math.max(d[i],d[i+2]);
+   if(rC&&d[i+1]>110&&d[i+1]>mb*1.02&&d[i+1]>d[i+2]+15){
+    const s=Math.min(0.85,0.4+(d[i+1]-mb)/80);
+    d[i]=d[i]*(1-s)+rC.r*s;d[i+1]=d[i+1]*(1-s)+rC.g*s;d[i+2]=d[i+2]*(1-s)+rC.b*s;
    }else if(d[i+1]>m*1.05)d[i+1]=m;
   }
   ctx.putImageData(reg,rx0,ry0)}
