@@ -238,6 +238,7 @@ h1{font-size:30px;font-weight:900;text-align:center;letter-spacing:.5px}
 <video id="cam" playsinline autoplay muted class="hidden"></video>
 <canvas id="cap" class="hidden"></canvas>
 <script>
+const HUMAN_CHARS={sumo:1,bodybuilder:1,ballerina:1,disco:1,pirate:1,superhero:1,rockstar:1};
 const CHARS=[
  {id:'sumo',name:'סומו',w:378,h:470,fx:231,fy:66,fw:100,fh:112},
  {id:'bodybuilder',name:'שרירן',w:311,h:475,fx:169,fy:70,fw:100,fh:110},
@@ -913,8 +914,9 @@ async function processFace(pi,url){
  ov.className='roundov';
  ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת עד דקה</div>';
  document.body.appendChild(ov);
- let aiImg=await aiEdit(pi,url);
- if(!aiImg)aiImg=await aiEdit(pi,url);
+ let aiImg=null;
+ if(!HUMAN_CHARS[p.char]){aiImg=await aiEdit(pi,url);
+ if(!aiImg)aiImg=await aiEdit(pi,url);}
  if(aiImg){
   const hy=await hybridRealFace(aiImg,url,S.players[pi].char).catch(()=>null);
   const small=await downscaleImg(hy||aiImg,720,0.87);
