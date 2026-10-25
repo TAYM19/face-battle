@@ -527,7 +527,9 @@ async function composite(pi){
  const SS=2;const fc=document.createElement('canvas');fc.width=Math.round(fw*SS);fc.height=Math.round(fh*SS);
  const fctx=fc.getContext('2d');
  const offX=(p.adj?p.adj.x:0)/100*fw,offY=(p.adj?p.adj.y:0)/100*fh;
+ fctx.filter='blur(0.7px)';
  fctx.drawImage(shot,(fw/2-d.ex*s0+offX)*SS,(fh/2-d.ey*s0+offY)*SS,shot.width*s0*SS,shot.height*s0*SS);
+ fctx.filter='none';
  // tone match: character neck ring vs face edge ring
  const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.4,true);
  const fImg=fctx.getImageData(0,0,fc.width,fc.height);
