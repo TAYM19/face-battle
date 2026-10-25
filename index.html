@@ -610,7 +610,7 @@ async function detectFaceE(img){
    const k=iw/w2;
    // face sits in the upper part of the skin region (face + neck)
    const ex=(sx/n)*k,ey=(minY+(maxY-minY)*0.35)*k;
-   let ery=Math.max((maxY-minY)*0.33*k,ih*0.12),erx=Math.max((maxX-minX)*0.5*k,iw*0.14);
+   let ery=Math.max((maxY-minY)*0.31*k,ih*0.12),erx=Math.max((maxX-minX)*0.48*k,iw*0.14);
    ery=Math.min(ery,ih*0.28);erx=Math.min(erx,iw*0.28);
    if(erx<ery*0.75)erx=ery*0.75;
    if(erx>ery*0.95)erx=ery*0.95;
@@ -699,7 +699,7 @@ async function aiEdit(pi,url){
  try{
   const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c.id+'.webp'});
   if(!sprUrl)return null;
-  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),70000);
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),100000);
   const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:sprUrl,prompt}),signal:ctl.signal});
   clearTimeout(to);
   const j=await r.json();
@@ -782,15 +782,15 @@ async function hybridRealFace(aiUrl,shotUrl){
  // paste with soft blurred mask
  const layer=document.createElement('canvas');layer.width=W;layer.height=H;
  const lx=layer.getContext('2d');
- const pw=gh.erx*2*1.35,ph=gh.ery*2*1.35;
+ const pw=gh.erx*2*1.08,ph=gh.ery*2*1.08;
  lx.drawImage(fc,gh.ex-pw/2,gh.ey-ph/2,pw,ph);
  const mk=document.createElement('canvas');mk.width=W;mk.height=H;
  const mctx=mk.getContext('2d');
  mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx,gh.ery);
- const mg=mctx.createRadialGradient(0,0,0,0,0,1.35);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.7,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1.08);
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.56,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;
- mctx.fillRect(-1.5,-1.5,3,3);
+ mctx.fillRect(-1.3,-1.3,2.6,2.6);
  mctx.setTransform(1,0,0,1,0,0);
  mctx.filter='blur(5px)';mctx.drawImage(mk,0,0);mctx.filter='none';
  lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
