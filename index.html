@@ -695,6 +695,39 @@ async function composite(pi){
  p.face=chip.toDataURL('image/jpeg',0.85);
  p.comp=cv.toDataURL('image/webp',0.92);
 }
+async function aiFaceBake(c0,shotUrl){
+ const desc=AI_PROMPTS[c0.id]||'a funny cartoon character';
+ const prompt=`First image: a character (${desc}) whose face area is a blank featureless patch. Second image: a real person's selfie photo. Put THIS person's face onto the character, replacing the blank face area. The face must stay EXACTLY the person from the second image - same eyes, nose, mouth, facial hair, skin tone and expression, photorealistic. Blend the face perfectly into the artwork: costume fur, hood, hair and headwear wrap naturally around the face edges with a soft inner shadow, lighting and colors consistent with the scene, and absolutely no visible seam, border, ring, glow or frame around the face. Keep the character's body, costume, pose, headwear and background exactly as in the first image. ${AI_STYLE}`;
+ try{
+  const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c0.id+'.webp'});
+  if(!sprUrl)return null;
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),100000);
+  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:sprUrl,image2:shotUrl,prompt}),signal:ctl.signal});
+  clearTimeout(to);
+  const j=await r.json();
+  if(j&&j.ok&&j.image)return j.image;
+ }catch(e){}
+ return null;
+}
+async function faceOk(url,c0){
+ try{
+  const im=await loadImg(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
+  const sx=W/c0.w,sy=H/c0.h;
+  const cv=document.createElement('canvas');cv.width=24;cv.height=24;
+  const cx=cv.getContext('2d');
+  cx.drawImage(im,(c0.fx-c0.fw/2)*sx,(c0.fy-c0.fh/2)*sy,c0.fw*sx,c0.fh*sy,0,0,24,24);
+  const d=cx.getImageData(0,0,24,24).data;
+  let skin=0,rs=0,gs=0,bs=0,n=24*24,mn=255,mx=0;
+  for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];
+   rs+=r;gs+=g;bs+=b;
+   const l=0.299*r+0.587*g+0.114*b;if(l<mn)mn=l;if(l>mx)mx=l;
+   if(r>95&&g>40&&b>20&&r>b&&r-g<80)skin++;}
+  if(gs>rs*1.05&&gs>bs*1.05)return false;
+  if(skin<n*0.25)return false;
+  if(mx-mn<25)return false;
+  return true;
+ }catch(e){return false}
+}
 async function aiEdit(pi,url){
  const c=charOf(S.players[pi]);if(!c)return null;
  const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
@@ -904,6 +937,29 @@ async function hybridRealFace(aiUrl,shotUrl,charId){
  ctx.fillStyle=sg;
  ctx.fillRect(-1.1,-1.1,2.2,2.2);
  ctx.restore();}
+ // rim-quality metric: ring zone around the opening must read as fur/skin, not glow residue
+ hybridRealFace.lastWasAsset=isAsset;
+ hybridRealFace.lastRimBad=0;
+ if(!isAsset&&rC){
+  const lumC2=0.299*rC.r+0.587*rC.g+0.114*rC.b;
+  const qd=ctx.getImageData(0,0,W,H).data;
+  let bad=0,tot=0;
+  for(let a=0;a<64;a++){
+   const th=a/64*Math.PI*2;
+   for(const tt of [1.0,1.15,1.3,1.45]){
+    const x=Math.round(gh.ex+Math.cos(th)*gh.erx*tt),y=Math.round(gh.ey+Math.sin(th)*gh.ery*tt);
+    if(x<0||y<0||x>=W||y>=H)continue;
+    const i=(y*W+x)*4,r=qd[i],g=qd[i+1],b=qd[i+2];
+    if(r>g*1.6&&r>b*1.6){tot++;continue}
+    const lum=0.299*r+0.587*g+0.114*b;
+    const greenish=g>r*1.05&&g>b*1.05;
+    const olive=g>=r*0.95&&lum<lumC2*0.6;
+    const dark=lum<lumC2*0.35;
+    tot++;if(greenish||olive||dark)bad++;
+   }
+  }
+  hybridRealFace.lastRimBad=bad/(tot||1);
+ }
  return cv.toDataURL('image/jpeg',0.92);
 }
 function downscaleImg(url,maxW,q){
@@ -914,14 +970,18 @@ async function processFace(pi,url){
  p.shot=url;p.det=null;p.adj={x:0,y:0,s:1};p.aiEdit=false;
  const ov=document.createElement('div');
  ov.className='roundov';
- ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת עד דקה</div>';
+ ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת דקה-שתיים</div>';
  document.body.appendChild(ov);
- let aiImg=null;
- if(!HUMAN_CHARS[p.char]){aiImg=await aiEdit(pi,url);
- if(!aiImg)aiImg=await aiEdit(pi,url);}
- if(aiImg){
-  const hy=await hybridRealFace(aiImg,url,S.players[pi].char).catch(()=>null);
-  const small=await downscaleImg(hy||aiImg,720,0.87);
+ const c0b=charOf(p);
+ let baked=null;
+ if(c0b){
+  for(let tries=0;tries<3&&!baked;tries++){
+   const ai=await aiFaceBake(c0b,url).catch(()=>null);
+   if(ai&&await faceOk(ai,c0b))baked=ai;
+  }
+ }
+ if(baked){
+  const small=await downscaleImg(baked,720,0.87);
   p.comp=small;p.aiEdit=true;
   const im=await loadImg(small);
   const chip=document.createElement('canvas');chip.width=96;chip.height=96;
