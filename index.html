@@ -796,10 +796,9 @@ async function hybridRealFace(aiUrl,shotUrl){
  // fur wrap: stretch hood fur inward over the rim zone so no glow residue survives
  {const srcAll=ctx.getImageData(0,0,W,H).data;
   const R0=0.80,R1=1.13;
-  const bx0=Math.max(0,(gh.ex-gh.erx*(R1+0.05))|0),by0=Math.max(0,(gh.ey-gh.ery*(R1+0.05))|0);
-  const bx1=Math.min(W-1,Math.ceil(gh.ex+gh.erx*(R1+0.05))),by1=Math.min(H-1,Math.ceil(gh.ey+gh.ery*(R1+0.05)));
-  const rw=bx1-bx0+1,rh=by1-by0+1;
-  const reg=ctx.getImageData(bx0,by0,rw,rh);const d=reg.data;
+  const bx0=Math.max(0,(gh.ex-gh.erx*(R1+0.06))|0),by0=Math.max(0,(gh.ey-gh.ery*(R1+0.06))|0);
+  const bx1=Math.min(W-1,Math.ceil(gh.ex+gh.erx*(R1+0.06))),by1=Math.min(H-1,Math.ceil(gh.ey+gh.ery*(R1+0.06)));
+  const wreg=ctx.createImageData(W,H);const d=wreg.data;
   for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){
    const dx=(x-gh.ex)/gh.erx,dy=(y-gh.ey)/gh.ery;
    const t=Math.sqrt(dx*dx+dy*dy);
@@ -816,13 +815,16 @@ async function hybridRealFace(aiUrl,shotUrl){
    const sx1=sx0+1,sy1=sy0+1;
    const i00=(sy0*W+sx0)*4,i10=(sy0*W+sx1)*4,i01=(sy1*W+sx0)*4,i11=(sy1*W+sx1)*4;
    const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
-   const di=((y-by0)*rw+(x-bx0))*4;
+   const di=(y*W+x)*4;
    const a=Math.min(1,(t-R0)/0.09)*Math.min(1,(R1a-t)/0.08);
-   d[di]=d[di]*(1-a)+(srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11)*a;
-   d[di+1]=d[di+1]*(1-a)+(srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11)*a;
-   d[di+2]=d[di+2]*(1-a)+(srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11)*a;
+   d[di]=srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11;
+   d[di+1]=srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11;
+   d[di+2]=srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11;
+   d[di+3]=a*255;
   }
-  ctx.putImageData(reg,bx0,by0)}
+  const wc=document.createElement('canvas');wc.width=W;wc.height=H;
+  wc.getContext('2d').putImageData(wreg,0,0);
+  ctx.save();ctx.filter='blur(3px)';ctx.drawImage(wc,0,0);ctx.restore()}
  // paste face recessed inside the opening; the hood fur wraps its boundary
  const layer=document.createElement('canvas');layer.width=W;layer.height=H;
  const lx=layer.getContext('2d');
