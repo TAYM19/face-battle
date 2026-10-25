@@ -697,7 +697,7 @@ async function composite(pi){
 async function aiEdit(pi,url){
  const c=charOf(S.players[pi]);if(!c)return null;
  const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
- const prompt=`Redraw this exact character: keep the same character, costume, pose, head shape, hat and headwear exactly as in the input image. ${desc}. The character's face area is a blank featureless flesh-toned patch. CRITICAL: paint that entire blank face area with a solid flat bright green (#00FF00) - pure chroma-key green, completely smooth, no face, no eyes, no mouth, no shading, and no other green anywhere in the image. Keep everything else about the character's head and headwear intact. Replace the background with a smooth solid dark purple studio backdrop. ${AI_STYLE}`;
+ const prompt=`Redraw this exact character: keep the same character, costume, pose, head shape, hat and headwear exactly as in the input image. ${desc}. The character's face area is a blank featureless flesh-toned patch. CRITICAL: cover the entire blank face area completely with a smooth opaque flat bright green mask (#00FF00), edge to edge from hairline to chin and ear to ear - pure chroma-key green paint over the face, no facial features, no shading, and no other green anywhere in the image. Keep everything else about the character's head and headwear intact. Replace the background with a smooth solid dark purple studio backdrop. ${AI_STYLE}`;
  try{
   const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c.id+'.webp'});
   if(!sprUrl)return null;
@@ -718,12 +718,24 @@ function findGreenHead(d,W,H){
  if(n<150)return null;
  return {ex:(minX+maxX)/2,ey:(minY+maxY)/2,erx:(maxX-minX)/2+1,ery:(maxY-minY)/2+1};
 }
-async function hybridRealFace(aiUrl,shotUrl){
+async function hybridRealFace(aiUrl,shotUrl,charId){
  const ai=await loadImg(aiUrl),shot=await loadImg(shotUrl);
- const W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
- const cv=document.createElement('canvas');cv.width=W;cv.height=H;
- const ctx=cv.getContext('2d');ctx.drawImage(ai,0,0,W,H);
- const gh=findGreenHead(ctx.getImageData(0,0,W,H).data,W,H);
+ let W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
+ let cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ let ctx=cv.getContext('2d');ctx.drawImage(ai,0,0,W,H);
+ let gh=findGreenHead(ctx.getImageData(0,0,W,H).data,W,H);
+ if(!gh&&charId){
+  const cc=CHARS.find(x=>x.id===charId);
+  if(cc){
+   const spr=await loadImg(charId+'.webp');
+   W=spr.naturalWidth||spr.width;H=spr.naturalHeight||spr.height;
+   cv=document.createElement('canvas');cv.width=W;cv.height=H;
+   ctx=cv.getContext('2d');
+   ctx.fillStyle='#1c1240';ctx.fillRect(0,0,W,H);
+   ctx.drawImage(spr,0,0,W,H);
+   gh={ex:cc.fx,ey:cc.fy,erx:cc.fw/2,ery:cc.fh/2};
+  }
+ }
  if(!gh)return null;
  const df=await detectFaceE(shot);
  if(!df)return null;
@@ -868,7 +880,7 @@ async function processFace(pi,url){
  let aiImg=await aiEdit(pi,url);
  if(!aiImg)aiImg=await aiEdit(pi,url);
  if(aiImg){
-  const hy=await hybridRealFace(aiImg,url).catch(()=>null);
+  const hy=await hybridRealFace(aiImg,url,S.players[pi].char).catch(()=>null);
   const small=await downscaleImg(hy||aiImg,720,0.87);
   p.comp=small;p.aiEdit=true;
   const im=await loadImg(small);
