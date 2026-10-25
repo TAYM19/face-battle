@@ -685,7 +685,7 @@ function findGreenHead(d,W,H){
  let minX=W,minY=H,maxX=0,maxY=0,n=0;
  for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){
   const i=(y*W+x)*4,r=d[i],g=d[i+1],b=d[i+2];
-  if(g>120&&g>r*1.5&&g>b*1.5){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;n++}
+  if(g>110&&g>r*1.12&&g>b*1.12){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;n++}
  }
  if(n<150)return null;
  return {ex:(minX+maxX)/2,ey:(minY+maxY)/2,erx:(maxX-minX)/2+1,ery:(maxY-minY)/2+1};
@@ -705,7 +705,7 @@ async function hybridRealFace(aiUrl,shotUrl){
   const reg=ctx.getImageData(rx0,ry0,rw,rh);const d=reg.data;
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
-   if(d[i+1]>m*1.05)d[i+1]=m;
+   if(d[i+1]>m*1.08)d[i+1]=m;
   }
   ctx.putImageData(reg,rx0,ry0)}
  // face crop + gentle contrast
@@ -756,7 +756,7 @@ async function hybridRealFace(aiUrl,shotUrl){
  const mctx=mk.getContext('2d');
  mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx,gh.ery);
  const mg=mctx.createRadialGradient(0,0,0,0,0,1.22);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.84,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.9,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;
  mctx.fillRect(-1.4,-1.4,2.8,2.8);
  mctx.setTransform(1,0,0,1,0,0);
