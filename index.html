@@ -608,11 +608,12 @@ async function detectFaceE(img){
   }
   if(n>w2*h2*0.02){
    const k=iw/w2;
-   const ex=(sx/n)*k,ey=(sy/n)*k;
-   let erx=Math.max((maxX-minX)*0.5*k,iw*0.14),ery=Math.max((maxY-minY)*0.42*k,ih*0.16);
-   erx=Math.min(erx,iw*0.3);ery=Math.min(ery,ih*0.3);
-   if(ery>erx*1.35)ery=erx*1.35;
-   if(erx>ery*1.2)erx=ery*1.2;
+   // face sits in the upper part of the skin region (face + neck)
+   const ex=(sx/n)*k,ey=(minY+(maxY-minY)*0.35)*k;
+   let ery=Math.max((maxY-minY)*0.33*k,ih*0.12),erx=Math.max((maxX-minX)*0.5*k,iw*0.14);
+   ery=Math.min(ery,ih*0.28);erx=Math.min(erx,iw*0.28);
+   if(erx<ery*0.75)erx=ery*0.75;
+   if(erx>ery*0.95)erx=ery*0.95;
    return {ex,ey,erx,ery};
   }
  }catch(e){}
