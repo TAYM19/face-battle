@@ -730,18 +730,20 @@ async function hybridRealFace(aiUrl,shotUrl){
  // costume ring color around the opening (before despill, skipping green)
  let rC=null;
  {const ad0=ctx.getImageData(0,0,W,H).data;
-  const R=[],G=[],B=[];
-  for(let a=0;a<48;a++)for(let t=1.35;t<=1.7;t+=0.17){
-   const th=a/48*Math.PI*2;
-   const x=Math.round(gh.ex+Math.cos(th)*gh.erx*t),y=Math.round(gh.ey+Math.sin(th)*gh.ery*t);
-   if(x<0||y<0||x>=W||y>=H)continue;
+  const bins={};
+  const bx0=Math.max(0,(gh.ex-gh.erx*2.4)|0),by0=Math.max(0,(gh.ey-gh.ery*2.4)|0);
+  const bx1=Math.min(W-1,(gh.ex+gh.erx*2.4)|0),by1=Math.min(H-1,(gh.ey+gh.ery*2.4)|0);
+  for(let y=by0;y<=by1;y+=2)for(let x=bx0;x<=bx1;x+=2){
    const i=(y*W+x)*4,r=ad0[i],g=ad0[i+1],b=ad0[i+2];
    if(g>100&&g>r*1.12&&g>b*1.12)continue;
    if(r+g+b<240)continue;
    if(r>g*1.4)continue;
-   R.push(r);G.push(g);B.push(b)}
-  const n=R.length;
-  if(n>30){R.sort((p,q)=>p-q);G.sort((p,q)=>p-q);B.sort((p,q)=>p-q);rC={r:R[n>>1],g:G[n>>1],b:B[n>>1]}}}
+   if(b>r*1.1)continue;
+   const k=(r>>4)+','+(g>>4)+','+(b>>4);
+   (bins[k]=bins[k]||[]).push(r,g,b)}
+  let best=null,bn=0;
+  for(const k in bins){const a=bins[k],c=a.length/3;if(c>bn){bn=c;best=a}}
+  if(best&&bn>40){let rs=0,gs=0,bs=0;for(let j=0;j<best.length;j+=3){rs+=best[j];gs+=best[j+1];bs+=best[j+2]}rC={r:rs/bn,g:gs/bn,b:bs/bn}}}
  // despill green residue around the head: strong green becomes costume color, mild tint is clamped
  {const rx0=Math.max(0,(gh.ex-gh.erx*2.2)|0),ry0=Math.max(0,(gh.ey-gh.ery*2.2)|0);
   const rw=Math.min(W-rx0,(gh.erx*4.4)|0),rh=Math.min(H-ry0,(gh.ery*4.4)|0);
