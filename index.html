@@ -151,7 +151,7 @@ const AI_PROMPTS={
  rockstar:'a wild rockstar with crazy hair, leather jacket and ripped jeans, holding an electric guitar, tongue out',
  chicken:'a person in a silly full-body fluffy yellow chicken costume with a beak hat, wings spread, chicken feet'
 };
-const AI_STYLE='Colorful hand-painted 3D cartoon style, exaggerated funny proportions, high quality, soft studio lighting. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
+const AI_STYLE='High quality 3D animated movie character render, modern Pixar-style animation, detailed materials and textures, cinematic soft studio lighting, exaggerated funny proportions, big expressive head. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
 
 const WIN_TAUNTS=['אני האלוף!','תראה איך אני רוקד!','אלוף. העולם.','מי הבוס? אני הבוס!','קל מדי...'];
 const LOSE_TAUNTS=['...לא יכול להיות','רימאטץ\'. עכשיו.','זה לא נגמר ככה','דרישת בדיקה!','נגמר לך המזל'];
@@ -575,7 +575,7 @@ async function composite(pi){
 async function aiEdit(pi,url){
  const c=charOf(S.players[pi]);if(!c)return null;
  const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
- const prompt=`Face swap: put the exact real photographic face and head from this photo onto a cartoon character: ${desc}. The head and face must stay a real photograph - photorealistic, unmodified, perfectly recognizable, natural skin texture and real hair. Only the body and outfit are cartoon. ${AI_STYLE}`;
+ const prompt=`Edit this photo: turn the person into ${desc}. The character has a normal human head with a friendly face. ${AI_STYLE}`;
  try{
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),70000);
   const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:url,prompt}),signal:ctl.signal});
