@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (!acc || !tok) { res.status(200).json({ ok: false, error: 'no-credentials' }); return; }
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
-  const image = body && body.image, prompt = body && body.prompt;
+  const image = body && body.image, prompt = body && body.prompt, image2 = body && body.image2;
   if (!image || !prompt || !image.startsWith('data:image')) { res.status(200).json({ ok: false, error: 'bad-input' }); return; }
   const model = process.env.CF_MODEL || '@cf/black-forest-labs/flux-2-klein-4b';
   try {
@@ -16,6 +16,11 @@ export default async function handler(req, res) {
     const fd = new FormData();
     fd.append('prompt', prompt);
     fd.append('input_image_0', new Blob([buf], { type: 'image/jpeg' }), 'input.jpg');
+    if (image2 && typeof image2 === 'string' && image2.startsWith('data:image')) {
+      const b642 = image2.slice(image2.indexOf(',') + 1);
+      const buf2 = Buffer.from(b642, 'base64');
+      if (buf2.length <= 6 * 1024 * 1024) fd.append('input_image_1', new Blob([buf2], { type: 'image/jpeg' }), 'input2.jpg');
+    }
     fd.append('width', '768');
     fd.append('height', '1024');
     const ctrl = new AbortController();
