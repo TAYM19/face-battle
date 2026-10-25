@@ -592,29 +592,31 @@ async function detectFaceE(img){
    return {ex,ey,erx,ery};
   }
  }catch(e){}
- // no reliable detection - locate the skin region (selfie framing)
+ // no reliable detection - skin centroid weighted toward typical selfie framing
  try{
   const w2=Math.min(380,iw),h2=Math.max(2,Math.round(ih*w2/iw));
   const cv=document.createElement('canvas');cv.width=w2;cv.height=h2;
   const cx2=cv.getContext('2d');cx2.drawImage(img,0,0,w2,h2);
   const dd=cx2.getImageData(0,0,w2,h2).data;
-  let sx=0,sy=0,n=0,minX=w2,minY=h2,maxX=0,maxY=0;
+  const pcx=w2*0.5,pcy=h2*0.35,sx2=2*Math.pow(w2*0.26,2),sy2=2*Math.pow(h2*0.22,2);
+  let swx=0,swy=0,sw=0,sxx=0,syy=0;
   for(let y=0;y<h2;y++)for(let x=0;x<w2;x++){
    const i=(y*w2+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
-   if(r>70&&r>b+15&&g>b+5&&r>=g-8&&(r-Math.min(g,b))>12){
-    sx+=x;sy+=y;n++;
-    if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+   if(r>80&&r-b>20&&r-g>5&&g-b>5&&r<252){
+    const dx=x-pcx,dy=y-pcy;
+    const w=Math.exp(-(dx*dx/sx2+dy*dy/sy2));
+    swx+=w*x;swy+=w*y;sw+=w;sxx+=w*x*x;syy+=w*y*y;
    }
   }
-  if(n>w2*h2*0.02){
+  if(sw>w2*h2*0.005){
    const k=iw/w2;
-   // face sits in the upper part of the skin region (face + neck)
-   const ex=(sx/n)*k,ey=(minY+(maxY-minY)*0.35)*k;
-   let ery=Math.max((maxY-minY)*0.31*k,ih*0.12),erx=Math.max((maxX-minX)*0.48*k,iw*0.14);
-   ery=Math.min(ery,ih*0.28);erx=Math.min(erx,iw*0.28);
-   if(erx<ery*0.75)erx=ery*0.75;
+   const cx=swx/sw,cy=swy/sw;
+   const vx=Math.max(0,sxx/sw-cx*cx),vy=Math.max(0,syy/sw-cy*cy);
+   let erx=Math.min(Math.max(Math.sqrt(vx)*1.6*k,iw*0.13),iw*0.26);
+   let ery=Math.min(Math.max(Math.sqrt(vy)*1.6*k,ih*0.13),ih*0.24);
    if(erx>ery*0.95)erx=ery*0.95;
-   return {ex,ey,erx,ery};
+   if(erx<ery*0.7)erx=ery*0.7;
+   return {ex:cx*k,ey:cy*k,erx,ery};
   }
  }catch(e){}
  return {ex:iw*0.5,ey:ih*0.42,erx:iw*0.22,ery:ih*0.20};
@@ -735,6 +737,8 @@ async function hybridRealFace(aiUrl,shotUrl){
    if(x<0||y<0||x>=W||y>=H)continue;
    const i=(y*W+x)*4,r=ad0[i],g=ad0[i+1],b=ad0[i+2];
    if(g>100&&g>r*1.12&&g>b*1.12)continue;
+   if(r+g+b<240)continue;
+   if(r>g*1.4)continue;
    rs+=r;gs+=g;bs+=b;n++}
   if(n>30)rC={r:rs/n,g:gs/n,b:bs/n}}
  // despill green residue around the head: strong green becomes costume color, mild tint is clamped
@@ -743,10 +747,9 @@ async function hybridRealFace(aiUrl,shotUrl){
   const reg=ctx.getImageData(rx0,ry0,rw,rh);const d=reg.data;
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
-   if(d[i+1]>m*1.08){
-    if(rC&&d[i+1]>m*1.15&&d[i+1]>105){d[i]=rC.r;d[i+1]=rC.g;d[i+2]=rC.b}
-    else d[i+1]=m;
-   }
+   if(rC&&d[i+1]>m*1.02&&d[i+1]>110&&d[i+1]>d[i+2]+15){
+    d[i]=d[i]*0.25+rC.r*0.75;d[i+1]=d[i+1]*0.25+rC.g*0.75;d[i+2]=d[i+2]*0.25+rC.b*0.75;
+   }else if(d[i+1]>m*1.05)d[i+1]=m;
   }
   ctx.putImageData(reg,rx0,ry0)}
  // face crop + gentle contrast
