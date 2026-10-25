@@ -720,6 +720,7 @@ function findGreenHead(d,W,H){
  if(ba<W*H*0.012)return null;
  if(n*4<ba*0.5)return null;
  if(bw<bh*0.45||bw>bh*1.35)return null;
+ if(bw>W*0.42||bh>H*0.36)return null;
  return {ex:(minX+maxX)/2,ey:(minY+maxY)/2,erx:(maxX-minX)/2+1,ery:(maxY-minY)/2+1};
 }
 async function hybridRealFace(aiUrl,shotUrl,charId){
