@@ -93,12 +93,18 @@ h1{font-size:30px;font-weight:900;text-align:center;letter-spacing:.5px}
 .winstage{position:relative;margin-top:6px;min-height:330px}
 .winnerbox{position:absolute;right:-14px;bottom:0;width:64%}
 .loserbox{position:absolute;left:-4px;bottom:0;width:37%;opacity:.95}
-.dance{animation:dance .8s ease-in-out infinite;transform-origin:bottom center}
+.dance{animation:dance 2.4s ease-in-out infinite;transform-origin:bottom center}
 @keyframes dance{
- 0%,100%{transform:rotate(-6deg) translateY(0) scaleX(1)}
- 25%{transform:rotate(4deg) translateY(-14px) scaleX(1.03)}
- 50%{transform:rotate(6deg) translateY(0) scaleX(.97)}
- 75%{transform:rotate(-4deg) translateY(-10px) scaleX(1.03)}
+ 0%{transform:translateY(0) rotate(0) scale(1,1)}
+ 10%{transform:translateY(-6%) rotate(-7deg) scale(.96,1.05)}
+ 20%{transform:translateY(0) rotate(0) scale(1.07,.9)}
+ 30%{transform:translateY(-8%) rotate(7deg) scale(.95,1.07)}
+ 40%{transform:translateY(0) rotate(0) scale(1.08,.9)}
+ 50%{transform:translateY(-5%) rotate(0) scale(1,1)}
+ 62%{transform:translateY(-5%) rotate(180deg) scale(.92,1.08)}
+ 74%{transform:translateY(0) rotate(360deg) scale(1.06,.94)}
+ 87%{transform:translateY(-7%) rotate(352deg) scale(.95,1.06)}
+ 100%{transform:translateY(0) rotate(360deg) scale(1,1)}
 }
 .sad{animation:sad 2.2s ease-in-out infinite;transform-origin:bottom center}
 @keyframes sad{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg) translateY(3px)}}
@@ -134,7 +140,19 @@ const CHARS=[
  {id:'superhero',name:'גיבור על',w:365,h:471,fx:214,fy:60,fw:100,fh:105},
  {id:'rockstar',name:'רוקסטאר',w:384,h:476,fx:181,fy:74,fw:90,fh:95},
  {id:'chicken',name:'תרנגול',w:365,h:479,fx:189,fy:94,fw:96,fh:100},
-];
+]
+const AI_PROMPTS={
+ sumo:'a funny chubby sumo wrestler wearing a dark mawashi belt, arms spread wide, cheerful, barefoot',
+ bodybuilder:'a funny bodybuilder with huge exaggerated muscles flexing both arms, wearing tiny posing trunks, confident grin',
+ ballerina:'a graceful ballerina in a pink tutu and pointe shoes, arms raised above head in fifth position, one leg lifted',
+ disco:'a funky 1970s disco dancer with a big afro, sparkly sequin jumpsuit, one finger pointing up, platform shoes',
+ pirate:'a cartoon pirate with a big hat, eyepatch, striped shirt and boots, holding a cutlass, parrot optional',
+ superhero:'a superhero in a bright cape and tights with an emblem on the chest, fists on hips, chest puffed out',
+ rockstar:'a wild rockstar with crazy hair, leather jacket and ripped jeans, holding an electric guitar, tongue out',
+ chicken:'a person in a silly full-body fluffy yellow chicken costume with a beak hat, wings spread, chicken feet'
+};
+const AI_STYLE='Colorful hand-painted 3D cartoon style, exaggerated funny proportions, high quality, soft studio lighting. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
+
 const WIN_TAUNTS=['אני האלוף!','תראה איך אני רוקד!','אלוף. העולם.','מי הבוס? אני הבוס!','קל מדי...'];
 const LOSE_TAUNTS=['...לא יכול להיות','רימאטץ\'. עכשיו.','זה לא נגמר ככה','דרישת בדיקה!','נגמר לך המזל'];
 const WIN_SCORE=3;
@@ -506,20 +524,33 @@ async function composite(pi){
  const fw=c.fw,fh=c.fh;
  const s0=Math.max(fw/(2*d.erx),fh/(2*d.ery))*1.14*(p.adj?s(p.adj):1);
  function s(a){return a&&a.s?a.s:1}
- const fc=document.createElement('canvas');fc.width=Math.round(fw);fc.height=Math.round(fh);
+ const SS=2;const fc=document.createElement('canvas');fc.width=Math.round(fw*SS);fc.height=Math.round(fh*SS);
  const fctx=fc.getContext('2d');
  const offX=(p.adj?p.adj.x:0)/100*fw,offY=(p.adj?p.adj.y:0)/100*fh;
- fctx.drawImage(shot,fw/2-d.ex*s0+offX,fh/2-d.ey*s0+offY,shot.width*s0,shot.height*s0);
+ fctx.drawImage(shot,(fw/2-d.ex*s0+offX)*SS,(fh/2-d.ey*s0+offY)*SS,shot.width*s0*SS,shot.height*s0*SS);
  // tone match: character neck ring vs face edge ring
- const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.35,true);
+ const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.4,true);
  const fImg=fctx.getImageData(0,0,fc.width,fc.height);
- const faceTone=ringMean(fImg.data,fc.width,fc.height,fc.width/2,fc.height*0.72,fc.width*0.18,fc.width*0.18,0,1,false);
+ let faceTone=null;
+ {let rs=0,gs=0,bs=0,n=0;const dd=fImg.data,cx=fc.width/2,cy=fc.height*0.7,rr=fc.width*0.2;
+  for(let y=Math.floor(cy-rr);y<cy+rr;y++)for(let x=Math.floor(cx-rr);x<cx+rr;x++){
+   if(x<0||y<0||x>=fc.width||y>=fc.height)continue;
+   const dx=(x-cx)/rr,dy=(y-cy)/rr;if(dx*dx+dy*dy>1)continue;
+   const i=(y*fc.width+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
+   if(r<60||r<g*0.9||g<b*0.75)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>80)faceTone={r:rs/n,g:gs/n,b:bs/n}}
  if(neckTone&&faceTone){
-  const gr=1+(Math.min(1.5,Math.max(0.65,neckTone.r/faceTone.r))-1)*0.8;
-  const gg=1+(Math.min(1.5,Math.max(0.65,neckTone.g/faceTone.g))-1)*0.8;
-  const gb=1+(Math.min(1.5,Math.max(0.65,neckTone.b/faceTone.b))-1)*0.8;
-  const dd=fImg.data;
-  for(let i=0;i<dd.length;i+=4){dd[i]*=gr;dd[i+1]*=gg;dd[i+2]*=gb}
+  const gr=Math.min(1.45,Math.max(0.7,neckTone.r/faceTone.r));
+  const gg=Math.min(1.45,Math.max(0.7,neckTone.g/faceTone.g));
+  const gb=Math.min(1.45,Math.max(0.7,neckTone.b/faceTone.b));
+  const dd=fImg.data,cx=fc.width/2,cy=fc.height/2;
+  for(let y=0;y<fc.height;y++)for(let x=0;x<fc.width;x++){
+   const dx=(x-cx)/(fc.width/2),dy=(y-cy)/(fc.height/2);
+   const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+   const w=0.6+0.4*rad;
+   const i=(y*fc.width+x)*4;
+   dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
   fctx.putImageData(fImg,0,0);
  }
  // elliptical feather mask
@@ -532,23 +563,50 @@ async function composite(pi){
  fctx.globalCompositeOperation='destination-in';
  fctx.drawImage(mk,0,0,fc.width,fc.height);
  fctx.globalCompositeOperation='source-over';
- ctx.drawImage(fc,c.fx-fw/2,c.fy-fh/2);
+ ctx.drawImage(fc,c.fx-fw/2,c.fy-fh/2,fw,fh);
  // chip face crop (square around face)
  const chip=document.createElement('canvas');chip.width=96;chip.height=96;
  chip.getContext('2d').drawImage(fc,fc.width*0.2,fc.height*0.15,fc.width*0.6,fc.height*0.6,0,0,96,96);
  p.face=chip.toDataURL('image/jpeg',0.85);
  p.comp=cv.toDataURL('image/webp',0.92);
 }
+async function aiEdit(pi,url){
+ const c=charOf(S.players[pi]);if(!c)return null;
+ const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
+ const prompt=`Edit this photo: turn the person into ${desc}. Keep the person's real face clearly recognizable - same eyes, nose, mouth, skin tone and expression - blended naturally onto the character's head. ${AI_STYLE}`;
+ try{
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),70000);
+  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:url,prompt}),signal:ctl.signal});
+  clearTimeout(to);
+  const j=await r.json();
+  if(j&&j.ok&&j.image)return j.image;
+ }catch(e){}
+ return null;
+}
+function downscaleImg(url,maxW,q){
+ return new Promise(res=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,maxW/im.width);const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',q))};im.onerror=()=>res(url);im.src=url});
+}
 async function processFace(pi,url){
- S.players[pi].shot=url;
- S.players[pi].det=null;
- S.players[pi].adj={x:0,y:0,s:1};
+ const p=S.players[pi];
+ p.shot=url;p.det=null;p.adj={x:0,y:0,s:1};p.aiEdit=false;
  const ov=document.createElement('div');
  ov.className='roundov';
- ov.innerHTML='<div class="rt" style="margin-top:0">מזהה את הפנים...</div><div class="rs">שנייה אחת</div>';
+ ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת עד דקה</div>';
  document.body.appendChild(ov);
+ const aiImg=await aiEdit(pi,url);
+ if(aiImg){
+  const small=await downscaleImg(aiImg,720,0.87);
+  p.comp=small;p.aiEdit=true;
+  const im=await loadImg(small);
+  const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+  chip.getContext('2d').drawImage(im,im.width*0.28,0,im.width*0.44,im.height*0.2,0,0,96,96);
+  p.face=chip.toDataURL('image/jpeg',0.85);
+  ov.remove();renderAdjust(pi);return;
+ }
+ ov.querySelector('.rt').textContent='מזהה את הפנים...';
+ ov.querySelector('.rs').textContent='שנייה אחת';
  const img=await loadImg(url);
- S.players[pi].det=await detectFaceE(img);
+ p.det=await detectFaceE(img);
  await composite(pi);
  ov.remove();
  renderAdjust(pi);
@@ -565,12 +623,14 @@ function renderAdjust(pi){
  const p=S.players[pi],c=charOf(p);
  app.innerHTML=`
   <div class="hdr"><h1 style="font-size:24px">הפנים על הדמות!</h1></div>
-  <div class="sub">${p.det?'זיהינו והדבקנו אוטומטית - אפשר ללטש בגרירה':'לא זיהינו פנים - סדרו ידנית בגרירה'}</div>
+  <div class="sub">${p.aiEdit?'נוצר עם AI ✨ - אם לא אוהבים, אפשר לנסות שוב':p.det?'זיהינו והדבקנו אוטומטית - אפשר ללטש בגרירה':'לא זיהינו פנים - סדרו ידנית בגרירה'}</div>
   <div class="adjwrap" id="aw"><img id="compImg" src="${p.comp}" style="width:100%;display:block;touch-action:none;cursor:grab"></div>
-  <div class="zoomrow"><span>זום</span><input type="range" id="zm" min="0.6" max="2.2" step="0.01" value="${p.adj.s}"></div>
+  ${p.aiEdit?'':'<div class="zoomrow"><span>זום</span><input type="range" id="zm" min="0.6" max="2.2" step="0.01" value="'+p.adj.s+'"></div>'}
   <button class="cta" id="ok">יאללה, מושלם</button>
+  ${p.aiEdit?'<button class="linkbtn" id="reai">נסה שוב עם AI</button>':''}
   <button class="linkbtn" id="re">צלם / העלה מחדש</button>`;
  const im=document.getElementById('compImg');
+ if(!p.aiEdit){
  let drag=null,pending=false;
  const refresh=async()=>{if(pending)return;pending=true;await composite(pi);im.src=p.comp;pending=false};
  im.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ax:p.adj.x,ay:p.adj.y};im.setPointerCapture(e.pointerId)};
@@ -583,7 +643,9 @@ function renderAdjust(pi){
  };
  im.onpointerup=()=>drag=null;
  document.getElementById('zm').oninput=e=>{p.adj.s=+e.target.value;refresh()};
+ }
  document.getElementById('ok').onclick=()=>{save();pi===0?renderVeil(1):renderMenu()};
+ const reai=document.getElementById('reai');if(reai)reai.onclick=()=>processFace(pi,p.shot);
  document.getElementById('re').onclick=()=>renderCam(pi);
 }
 async function renderCam(pi){
@@ -591,7 +653,7 @@ async function renderCam(pi){
  const c=charOf(S.players[pi]);
  app.innerHTML=`
   <div class="hdr"><h1 style="font-size:24px">צלם סלפי</h1></div>
-  <div class="sub">הפנים שלך יתלבשו על <b style="color:#f6c445">${c.name}</b> - אנחנו מדביקים אוטומטית!</div>
+  <div class="sub">הפנים שלך יתלבשו על <b style="color:#f6c445">${c.name}</b> - ה-AI עורך אוטומטית!</div>
   <div class="camwrap"><video id="pv" playsinline autoplay muted></video></div>
   <div class="shoot"><button class="shutter" id="sh" aria-label="צלם"></button></div>
   <button class="linkbtn" id="up">או העלה תמונה מהגלריה</button>
