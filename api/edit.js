@@ -33,6 +33,19 @@ export default async function handler(req, res) {
       res.status(200).json({ ok: true, image: 'data:image/png;base64,' + out.toString('base64') });
       return;
     }
+    if (r.ok && ct.includes('json')) {
+      try {
+        const j = await r.json();
+        const b64 = j && j.result && j.result.image;
+        if (b64) {
+          const mime = b64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+          res.status(200).json({ ok: true, image: 'data:' + mime + ';base64,' + b64 });
+          return;
+        }
+        res.status(200).json({ ok: false, error: 'cf-json-noimage', detail: JSON.stringify(j).slice(0, 300) });
+        return;
+      } catch (e) {}
+    }
     let errTxt = '';
     try { errTxt = (await r.text()).slice(0, 400); } catch (e) {}
     res.status(200).json({ ok: false, error: 'cf-' + r.status, detail: errTxt });
