@@ -748,10 +748,16 @@ async function hybridRealFace(aiUrl,shotUrl){
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
    const mb=Math.max(d[i],d[i+2]);
-   if(rC&&d[i+1]>110&&d[i+1]>mb*1.02&&d[i+1]>d[i+2]+15){
-    const s=Math.min(0.85,0.4+(d[i+1]-mb)/80);
-    d[i]=d[i]*(1-s)+rC.r*s;d[i+1]=d[i+1]*(1-s)+rC.g*s;d[i+2]=d[i+2]*(1-s)+rC.b*s;
-   }else if(d[i+1]>m*1.05)d[i+1]=m;
+   if(d[i+1]>mb*1.02&&d[i+1]>100){
+    const gc=mb*1.02;
+    if(rC){
+     const t=Math.min(1,(d[i+1]-mb)/70);
+     const f=0.35+0.5*t;
+     d[i]=d[i]*(1-f)+rC.r*f;
+     d[i+2]=d[i+2]*(1-f)+rC.b*f;
+     d[i+1]=Math.min(gc,d[i+1]*(1-f)+rC.g*f);
+    }else d[i+1]=gc;
+   }
   }
   ctx.putImageData(reg,rx0,ry0)}
  // face crop + gentle contrast
