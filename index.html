@@ -1015,14 +1015,14 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  {let rs=0,gs=0,bs=0,n=0;
   for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
    const dx=(x-cx)/erx,dy=(y-cy)/ery;
-   if(dx*dx+dy*dy>0.55)continue;
+   if(dx*dx+dy*dy>0.45)continue;
    const i=(y*pw+x)*4,r=pd0[i],g=pd0[i+1],b=pd0[i+2];
-   if(r<60||r>250||r<b+10||r<g)continue;
+   if(0.299*r+0.587*g+0.114*b<45)continue;
    rs+=r;gs+=g;bs+=b;n++}
   if(n>120)fT={r:rs/n,g:gs/n,b:bs/n}}
  // source face layer in patch scale, rotated upright
  const sc=(erx/s.erx+ery/s.ery)/2;
- const K=1.30;
+ const K=1.50;
  const sw=Math.max(4,Math.round(s.erx*2*K*sc)),sh=Math.max(4,Math.round(s.ery*2*K*sc));
  const fc=document.createElement('canvas');fc.width=sw;fc.height=sh;
  const fx=fc.getContext('2d');
@@ -1048,17 +1048,16 @@ async function identityRestore(bakedUrl,shotUrl,c0){
     dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));
     dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
    fx.putImageData(fImg,0,0)}}
- // feathered elliptical mask, recessed paste
- const PSC=0.80;
+ // feathered elliptical mask; the face fully covers klein's face, feathered into the fur
  const layer=document.createElement('canvas');layer.width=pw;layer.height=ph;
  const lx=layer.getContext('2d');
  lx.drawImage(fc,cx-sw/2,cy-sh/2);
  const mk=document.createElement('canvas');mk.width=pw;mk.height=ph;
  const mctx=mk.getContext('2d');
- mctx.translate(cx,cy);mctx.scale(erx*PSC,ery*PSC);
+ mctx.translate(cx,cy);mctx.scale(erx*1.3,ery*1.3);
  const mg=mctx.createRadialGradient(0,0,0,0,0,1);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.52,'rgba(0,0,0,1)');
- mg.addColorStop(0.88,'rgba(0,0,0,0)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.69,'rgba(0,0,0,1)');
+ mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;mctx.fillRect(-1.15,-1.15,2.3,2.3);
  mctx.setTransform(1,0,0,1,0,0);
  mctx.filter='blur(3px)';mctx.drawImage(mk,0,0);mctx.filter='none';
@@ -1067,7 +1066,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  px.drawImage(layer,0,0);
  // fur wrap: stretch the bake's own fur inward over the rim
  {const srcAll=pre.getContext('2d').getImageData(0,0,pw,ph).data;
-  const R0=0.64,R1=1.26;
+  const R0=0.98,R1=1.50;
   const bx0=Math.max(0,Math.floor(cx-erx*(R1+0.08))),by0=Math.max(0,Math.floor(cy-ery*(R1+0.08)));
   const bx1=Math.min(pw-1,Math.ceil(cx+erx*(R1+0.08))),by1=Math.min(ph-1,Math.ceil(cy+ery*(R1+0.08)));
   const wreg=px.createImageData(pw,ph);const d=wreg.data;
@@ -1079,7 +1078,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
    const R1a=R1-0.11*Math.max(0,-uy)*Math.max(0,-uy);
    if(tt>R1a)continue;
    const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
-   const ts=1.27+(j<0?-j:j)*0.12;
+   const ts=1.52+(j<0?-j:j)*0.12;
    const fx2=cx+ux*erx*ts,fy2=cy+uy*ery*ts;
    const sx0=Math.floor(fx2),sy0=Math.floor(fy2);
    if(sx0<0||sy0<0||sx0>=pw-1||sy0>=ph-1)continue;
@@ -1087,7 +1086,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
    const i00=(sy0*pw+sx0)*4,i10=(sy0*pw+sx0+1)*4,i01=((sy0+1)*pw+sx0)*4,i11=((sy0+1)*pw+sx0+1)*4;
    const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
    const di=(y*pw+x)*4;
-   let a=Math.min(1,(tt-R0)/0.10)*Math.min(1,(R1a-tt)/0.08);
+   let a=Math.min(1,(tt-R0)/0.12)*Math.min(1,(R1a-tt)/0.08);
    if(uy>0.25)a*=Math.max(0.15,1-(uy-0.25)*1.1);
    d[di]=srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11;
    d[di+1]=srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11;
