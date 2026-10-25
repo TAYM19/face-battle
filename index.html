@@ -592,7 +592,30 @@ async function detectFaceE(img){
    return {ex,ey,erx,ery};
   }
  }catch(e){}
- // no reliable detection - typical selfie framing (face upper-center)
+ // no reliable detection - locate the skin region (selfie framing)
+ try{
+  const w2=Math.min(380,iw),h2=Math.max(2,Math.round(ih*w2/iw));
+  const cv=document.createElement('canvas');cv.width=w2;cv.height=h2;
+  const cx2=cv.getContext('2d');cx2.drawImage(img,0,0,w2,h2);
+  const dd=cx2.getImageData(0,0,w2,h2).data;
+  let sx=0,sy=0,n=0,minX=w2,minY=h2,maxX=0,maxY=0;
+  for(let y=0;y<h2;y++)for(let x=0;x<w2;x++){
+   const i=(y*w2+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
+   if(r>70&&r>b+15&&g>b+5&&r>=g-8&&(r-Math.min(g,b))>12){
+    sx+=x;sy+=y;n++;
+    if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+   }
+  }
+  if(n>w2*h2*0.02){
+   const k=iw/w2;
+   const ex=(sx/n)*k,ey=(sy/n)*k;
+   let erx=Math.max((maxX-minX)*0.5*k,iw*0.14),ery=Math.max((maxY-minY)*0.42*k,ih*0.16);
+   erx=Math.min(erx,iw*0.3);ery=Math.min(ery,ih*0.3);
+   if(ery>erx*1.35)ery=erx*1.35;
+   if(erx>ery*1.2)erx=ery*1.2;
+   return {ex,ey,erx,ery};
+  }
+ }catch(e){}
  return {ex:iw*0.5,ey:ih*0.42,erx:iw*0.22,ery:ih*0.20};
 }
 function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
@@ -701,13 +724,28 @@ async function hybridRealFace(aiUrl,shotUrl){
  if(!gh)return null;
  const df=await detectFaceE(shot);
  if(!df)return null;
- // despill green residue around the head
+ // costume ring color around the opening (before despill, skipping green)
+ let rC=null;
+ {const ad0=ctx.getImageData(0,0,W,H).data;
+  let rs=0,gs=0,bs=0,n=0;
+  for(let a=0;a<48;a++)for(let t=1.35;t<=1.7;t+=0.17){
+   const th=a/48*Math.PI*2;
+   const x=Math.round(gh.ex+Math.cos(th)*gh.erx*t),y=Math.round(gh.ey+Math.sin(th)*gh.ery*t);
+   if(x<0||y<0||x>=W||y>=H)continue;
+   const i=(y*W+x)*4,r=ad0[i],g=ad0[i+1],b=ad0[i+2];
+   if(g>100&&g>r*1.12&&g>b*1.12)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>30)rC={r:rs/n,g:gs/n,b:bs/n}}
+ // despill green residue around the head: strong green becomes costume color, mild tint is clamped
  {const rx0=Math.max(0,(gh.ex-gh.erx*2.2)|0),ry0=Math.max(0,(gh.ey-gh.ery*2.2)|0);
   const rw=Math.min(W-rx0,(gh.erx*4.4)|0),rh=Math.min(H-ry0,(gh.ery*4.4)|0);
   const reg=ctx.getImageData(rx0,ry0,rw,rh);const d=reg.data;
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
-   if(d[i+1]>m*1.08)d[i+1]=m;
+   if(d[i+1]>m*1.08){
+    if(rC&&d[i+1]>m*1.35&&d[i+1]>110){d[i]=rC.r;d[i+1]=rC.g;d[i+2]=rC.b}
+    else d[i+1]=m;
+   }
   }
   ctx.putImageData(reg,rx0,ry0)}
  // face crop + gentle contrast
@@ -724,23 +762,14 @@ async function hybridRealFace(aiUrl,shotUrl){
    dd[i+1]=Math.min(255,Math.max(0,128+(dd[i+1]-128)*1.07));
    dd[i+2]=Math.min(255,Math.max(0,128+(dd[i+2]-128)*1.07))}
   fctx.putImageData(fImg,0,0)}
- // tone match to the costume ring around the opening (skip green)
- {const ad=ctx.getImageData(0,0,W,H).data;
-  let rs=0,gs=0,bs=0,n=0;
-  for(let a=0;a<48;a++)for(let t=1.35;t<=1.7;t+=0.17){
-   const th=a/48*Math.PI*2;
-   const x=Math.round(gh.ex+Math.cos(th)*gh.erx*t),y=Math.round(gh.ey+Math.sin(th)*gh.ery*t);
-   if(x<0||y<0||x>=W||y>=H)continue;
-   const i=(y*W+x)*4,r=ad[i],g=ad[i+1],b=ad[i+2];
-   if(g>100&&g>r*1.25&&g>b*1.25)continue;
-   rs+=r;gs+=g;bs+=b;n++}
-  if(n>30){
+ // tone match the face to the costume ring color
+ {if(rC){
    const fImg=fctx.getImageData(0,0,fw,fh);
    const ft=ringMean(fImg.data,fw,fh,fw/2,fh/2,fw/2,fh/2,0.55,0.9,false);
    if(ft){
-    const gr=Math.min(1.3,Math.max(0.75,(rs/n)/Math.max(1,ft.r)));
-    const gg=Math.min(1.3,Math.max(0.75,(gs/n)/Math.max(1,ft.g)));
-    const gb=Math.min(1.3,Math.max(0.75,(bs/n)/Math.max(1,ft.b)));
+    const gr=Math.min(1.3,Math.max(0.75,rC.r/Math.max(1,ft.r)));
+    const gg=Math.min(1.3,Math.max(0.75,rC.g/Math.max(1,ft.g)));
+    const gb=Math.min(1.3,Math.max(0.75,rC.b/Math.max(1,ft.b)));
     const dd=fImg.data,cx=fw/2,cy=fh/2;
     for(let y=0;y<fh;y++)for(let x=0;x<fw;x++){
      const dx=(x-cx)/(fw/2),dy=(y-cy)/(fh/2);
@@ -752,15 +781,15 @@ async function hybridRealFace(aiUrl,shotUrl){
  // paste with soft blurred mask
  const layer=document.createElement('canvas');layer.width=W;layer.height=H;
  const lx=layer.getContext('2d');
- const pw=gh.erx*2*1.22,ph=gh.ery*2*1.22;
+ const pw=gh.erx*2*1.35,ph=gh.ery*2*1.35;
  lx.drawImage(fc,gh.ex-pw/2,gh.ey-ph/2,pw,ph);
  const mk=document.createElement('canvas');mk.width=W;mk.height=H;
  const mctx=mk.getContext('2d');
  mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx,gh.ery);
- const mg=mctx.createRadialGradient(0,0,0,0,0,1.22);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.9,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1.35);
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.7,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;
- mctx.fillRect(-1.4,-1.4,2.8,2.8);
+ mctx.fillRect(-1.5,-1.5,3,3);
  mctx.setTransform(1,0,0,1,0,0);
  mctx.filter='blur(5px)';mctx.drawImage(mk,0,0);mctx.filter='none';
  lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
