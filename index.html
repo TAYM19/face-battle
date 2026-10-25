@@ -744,7 +744,7 @@ async function hybridRealFace(aiUrl,shotUrl){
   for(let i=0;i<d.length;i+=4){
    const m=Math.max(d[i],d[i+2]);
    if(d[i+1]>m*1.08){
-    if(rC&&d[i+1]>m*1.35&&d[i+1]>110){d[i]=rC.r;d[i+1]=rC.g;d[i+2]=rC.b}
+    if(rC&&d[i+1]>m*1.15&&d[i+1]>105){d[i]=rC.r;d[i+1]=rC.g;d[i+2]=rC.b}
     else d[i+1]=m;
    }
   }
@@ -788,7 +788,7 @@ async function hybridRealFace(aiUrl,shotUrl){
  const mctx=mk.getContext('2d');
  mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx,gh.ery);
  const mg=mctx.createRadialGradient(0,0,0,0,0,1.08);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.56,'rgba(0,0,0,1)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.5,'rgba(0,0,0,1)');mg.addColorStop(0.92,'rgba(0,0,0,0)');mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;
  mctx.fillRect(-1.3,-1.3,2.6,2.6);
  mctx.setTransform(1,0,0,1,0,0);
