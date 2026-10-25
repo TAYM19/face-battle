@@ -795,7 +795,7 @@ async function hybridRealFace(aiUrl,shotUrl){
     fctx.putImageData(fImg,0,0)}}}
  // fur wrap: stretch hood fur inward over the rim zone so no glow residue survives
  {const srcAll=ctx.getImageData(0,0,W,H).data;
-  const R0=0.78,R1=1.34;
+  const R0=0.80,R1=1.13;
   const bx0=Math.max(0,(gh.ex-gh.erx*(R1+0.05))|0),by0=Math.max(0,(gh.ey-gh.ery*(R1+0.05))|0);
   const bx1=Math.min(W-1,Math.ceil(gh.ex+gh.erx*(R1+0.05))),by1=Math.min(H-1,Math.ceil(gh.ey+gh.ery*(R1+0.05)));
   const rw=bx1-bx0+1,rh=by1-by0+1;
@@ -804,13 +804,13 @@ async function hybridRealFace(aiUrl,shotUrl){
    const dx=(x-gh.ex)/gh.erx,dy=(y-gh.ey)/gh.ery;
    const t=Math.sqrt(dx*dx+dy*dy);
    if(t<R0||t>R1)continue;
-   const j=((x*7+y*13)%17)/16*0.16;
-   const ts=1.36+j;
+   const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
+   const ts=1.17+(j<0?-j:j)*0.10;
    const ux=dx/t,uy=dy/t;
    const sx=Math.round(gh.ex+ux*gh.erx*ts),sy=Math.round(gh.ey+uy*gh.ery*ts);
    if(sx<0||sy<0||sx>=W||sy>=H)continue;
    const si=(sy*W+sx)*4,di=((y-by0)*rw+(x-bx0))*4;
-   const a=Math.min(1,(t-R0)/0.10)*Math.min(1,(R1-t)/0.10);
+   const a=Math.min(1,(t-R0)/0.09)*Math.min(1,(R1-t)/0.08);
    d[di]=d[di]*(1-a)+srcAll[si]*a;
    d[di+1]=d[di+1]*(1-a)+srcAll[si+1]*a;
    d[di+2]=d[di+2]*(1-a)+srcAll[si+2]*a;
