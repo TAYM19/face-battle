@@ -446,6 +446,7 @@ function loadFaceApi(){
   await loadScript('face-api.min.js');
   try{await faceapi.nets.ssdMobilenetv1.loadFromUri('./');_model='ssd'}
   catch(e){await faceapi.nets.tinyFaceDetector.loadFromUri('./');_model='tiny'}
+  try{await faceapi.nets.faceLandmark68Net.loadFromUri('./')}catch(e){}
  })();
  return _apiReady;
 }
@@ -453,10 +454,26 @@ async function detectFaceE(img){
  try{
   await loadFaceApi();
   const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.25}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.2});
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+  try{
+   const det=await faceapi.detectSingleFace(img,opts).withFaceLandmarks();
+   if(!det)return null;
+   const lm=det.landmarks;
+   const jaw=lm.getJawOutline();
+   const xs=jaw.map(p=>p.x);
+   const minX=Math.min(...xs),maxX=Math.max(...xs);
+   const chinY=Math.max(...jaw.map(p=>p.y));
+   const browY=Math.min(...lm.getLeftEyeBrow().map(p=>p.y),...lm.getRightEyeBrow().map(p=>p.y));
+   const topY=browY-(chinY-browY)*0.42;
+   const ex=Math.min(Math.max((minX+maxX)/2,iw*0.05),iw*0.95);
+   const ey=Math.min(Math.max((topY+chinY)/2,ih*0.05),ih*0.95);
+   const erx=Math.min((maxX-minX)*0.62,iw*0.45);
+   const ery=Math.min((chinY-topY)*0.56,ih*0.48);
+   return {ex,ey,erx,ery};
+  }catch(e2){}
   const det=await faceapi.detectSingleFace(img,opts);
   if(!det)return null;
   const b=det.box;
-  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
   const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
   const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
   const erx=Math.min(b.width*0.52,iw*0.42);
@@ -498,9 +515,9 @@ async function composite(pi){
  const fImg=fctx.getImageData(0,0,fc.width,fc.height);
  const faceTone=ringMean(fImg.data,fc.width,fc.height,fc.width/2,fc.height*0.72,fc.width*0.18,fc.width*0.18,0,1,false);
  if(neckTone&&faceTone){
-  const gr=1+(Math.min(1.5,Math.max(0.65,neckTone.r/faceTone.r))-1)*0.55;
-  const gg=1+(Math.min(1.5,Math.max(0.65,neckTone.g/faceTone.g))-1)*0.55;
-  const gb=1+(Math.min(1.5,Math.max(0.65,neckTone.b/faceTone.b))-1)*0.55;
+  const gr=1+(Math.min(1.5,Math.max(0.65,neckTone.r/faceTone.r))-1)*0.8;
+  const gg=1+(Math.min(1.5,Math.max(0.65,neckTone.g/faceTone.g))-1)*0.8;
+  const gb=1+(Math.min(1.5,Math.max(0.65,neckTone.b/faceTone.b))-1)*0.8;
   const dd=fImg.data;
   for(let i=0;i<dd.length;i+=4){dd[i]*=gr;dd[i+1]*=gg;dd[i+2]*=gb}
   fctx.putImageData(fImg,0,0);
