@@ -601,7 +601,6 @@ async function hybridRealFace(aiUrl,shotUrl){
  const ctx=cv.getContext('2d');ctx.drawImage(ai,0,0,W,H);
  const gh=findGreenHead(ctx.getImageData(0,0,W,H).data,W,H);
  if(!gh)return null;
- gh.erx*=1.18;gh.ery*=1.18;
  const df=await detectFaceE(shot);
  if(!df)return null;
  const SS=2;
@@ -611,41 +610,22 @@ async function hybridRealFace(aiUrl,shotUrl){
  fctx.filter='blur(0.6px)';
  fctx.drawImage(shot,df.ex-df.erx,df.ey-df.ery,df.erx*2,df.ery*2,0,0,fw,fh);
  fctx.filter='none';
- // tone match to the neck just below the green oval
- let aiTone=null;
- {const ad=ctx.getImageData(0,0,W,H).data;
-  const cx=gh.ex,cy=Math.min(H-6,gh.ey+gh.ery*1.05),rx=gh.erx*0.55,ry=Math.max(5,gh.erx*0.35);
-  let rs=0,gs=0,bs=0,n=0;
-  for(let y=Math.max(0,Math.floor(cy-ry));y<=Math.min(H-1,Math.ceil(cy+ry));y++)
-   for(let x=Math.max(0,Math.floor(cx-rx));x<=Math.min(W-1,Math.ceil(cx+rx));x++){
-    const i=(y*W+x)*4,r=ad[i],g=ad[i+1],b=ad[i+2];
-    if(g>110&&g>r*1.4&&g>b*1.4)continue; // skip chroma green
-    rs+=r;gs+=g;bs+=b;n++}
-  if(n>60)aiTone={r:rs/n,g:gs/n,b:bs/n}}
- const fImg=fctx.getImageData(0,0,fw,fh);
- const faceTone=ringMean(fImg.data,fw,fh,fw/2,fh/2,fw/2,fh/2,0.82,0.99,false);
- if(aiTone&&faceTone){
-  const gr=Math.min(1.35,Math.max(0.75,aiTone.r/Math.max(1,faceTone.r)));
-  const gg=Math.min(1.35,Math.max(0.75,aiTone.g/Math.max(1,faceTone.g)));
-  const gb=Math.min(1.35,Math.max(0.75,aiTone.b/Math.max(1,faceTone.b)));
-  const dd=fImg.data,cx=fw/2,cy=fh/2;
-  for(let y=0;y<fh;y++)for(let x=0;x<fw;x++){
-   const dx=(x-cx)/(fw/2),dy=(y-cy)/(fh/2);
-   const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
-   const w=0.78+0.22*rad;
-   const i=(y*fw+x)*4;
-   dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
-  fctx.putImageData(fImg,0,0);
- }
- const mk=document.createElement('canvas');mk.width=fw;mk.height=fh;
- const mctx=mk.getContext('2d');
- mctx.translate(fw/2,fh/2);mctx.scale(1,fh/fw);
- const g=mctx.createRadialGradient(0,0,0,0,0,fw/2);
- g.addColorStop(0.78,'rgba(0,0,0,1)');g.addColorStop(1.0,'rgba(0,0,0,0)');
- mctx.fillStyle=g;mctx.fillRect(-fw/2,-fh/2,fw,fh);
- fctx.globalCompositeOperation='destination-in';fctx.drawImage(mk,0,0);
- fctx.globalCompositeOperation='source-over';
- ctx.drawImage(fc,gh.ex-gh.erx,gh.ey-gh.ery,gh.erx*2,gh.ery*2);
+ const layer=document.createElement('canvas');layer.width=W;layer.height=H;
+ const lx=layer.getContext('2d');
+ const pw=gh.erx*2*1.32,ph=gh.ery*2*1.32;
+ lx.drawImage(fc,gh.ex-pw/2,gh.ey-ph/2,pw,ph);
+ lx.globalCompositeOperation='destination-in';
+ const mg=lx.createRadialGradient(gh.ex,gh.ey,0,gh.ex,gh.ey,gh.erx*1.30);
+ mg.addColorStop(0,'rgba(0,0,0,1)');
+ mg.addColorStop(gh.erx*1.14/(gh.erx*1.30),'rgba(0,0,0,1)');
+ mg.addColorStop(1,'rgba(0,0,0,0)');
+ lx.save();
+ lx.translate(gh.ex,gh.ey);lx.scale(1,gh.ery/gh.erx);lx.translate(-gh.ex,-gh.ey);
+ lx.fillStyle=mg;
+ lx.fillRect(gh.ex-gh.erx*1.4,gh.ey-gh.ery*1.4,gh.erx*2.8,gh.ery*2.8);
+ lx.restore();
+ lx.globalCompositeOperation='source-over';
+ ctx.drawImage(layer,0,0);
  return cv.toDataURL('image/jpeg',0.92);
 }
 function downscaleImg(url,maxW,q){
