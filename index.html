@@ -671,10 +671,12 @@ async function composite(pi){
 async function aiEdit(pi,url){
  const c=charOf(S.players[pi]);if(!c)return null;
  const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
- const prompt=`Full-body portrait of a cartoon character: ${desc}. CRITICAL: the character's head is a solid flat bright green (#00FF00) smooth featureless oval - pure chroma-key green, no face, no eyes, no mouth, no hair, exactly one solid green oval head on the neck, and no other green anywhere in the image. Do NOT keep the input person's face, head or hair anywhere - replace the head entirely with the green oval. Replace the input photo's background completely with the plain background. ${AI_STYLE}`;
+ const prompt=`Redraw this exact character: keep the same character, costume, pose, head shape, hat and headwear exactly as in the input image. ${desc}. CRITICAL: replace only the blank white face area with a solid flat bright green (#00FF00) smooth featureless oval - pure chroma-key green, no face, no eyes, no mouth on the oval, and no other green anywhere in the image. Keep everything else about the character's head and headwear intact. Replace the background with the plain background. ${AI_STYLE}`;
  try{
+  const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c.id+'.webp'});
+  if(!sprUrl)return null;
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),70000);
-  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:url,prompt}),signal:ctl.signal});
+  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:sprUrl,prompt}),signal:ctl.signal});
   clearTimeout(to);
   const j=await r.json();
   if(j&&j.ok&&j.image)return j.image;
