@@ -601,6 +601,7 @@ async function hybridRealFace(aiUrl,shotUrl){
  const ctx=cv.getContext('2d');ctx.drawImage(ai,0,0,W,H);
  const gh=findGreenHead(ctx.getImageData(0,0,W,H).data,W,H);
  if(!gh)return null;
+ gh.erx*=1.18;gh.ery*=1.18;
  const df=await detectFaceE(shot);
  if(!df)return null;
  const SS=2;
@@ -611,7 +612,16 @@ async function hybridRealFace(aiUrl,shotUrl){
  fctx.drawImage(shot,df.ex-df.erx,df.ey-df.ery,df.erx*2,df.ery*2,0,0,fw,fh);
  fctx.filter='none';
  // tone match to the neck just below the green oval
- const aiTone=ringMean(ctx.getImageData(0,0,W,H).data,W,H,gh.ex,Math.min(H-4,gh.ey+gh.ery*1.15),gh.erx*0.5,Math.max(4,gh.erx*0.3),0.55,0.95,false);
+ let aiTone=null;
+ {const ad=ctx.getImageData(0,0,W,H).data;
+  const cx=gh.ex,cy=Math.min(H-6,gh.ey+gh.ery*1.05),rx=gh.erx*0.55,ry=Math.max(5,gh.erx*0.35);
+  let rs=0,gs=0,bs=0,n=0;
+  for(let y=Math.max(0,Math.floor(cy-ry));y<=Math.min(H-1,Math.ceil(cy+ry));y++)
+   for(let x=Math.max(0,Math.floor(cx-rx));x<=Math.min(W-1,Math.ceil(cx+rx));x++){
+    const i=(y*W+x)*4,r=ad[i],g=ad[i+1],b=ad[i+2];
+    if(g>110&&g>r*1.4&&g>b*1.4)continue; // skip chroma green
+    rs+=r;gs+=g;bs+=b;n++}
+  if(n>60)aiTone={r:rs/n,g:gs/n,b:bs/n}}
  const fImg=fctx.getImageData(0,0,fw,fh);
  const faceTone=ringMean(fImg.data,fw,fh,fw/2,fh/2,fw/2,fh/2,0.82,0.99,false);
  if(aiTone&&faceTone){
@@ -631,7 +641,7 @@ async function hybridRealFace(aiUrl,shotUrl){
  const mctx=mk.getContext('2d');
  mctx.translate(fw/2,fh/2);mctx.scale(1,fh/fw);
  const g=mctx.createRadialGradient(0,0,0,0,0,fw/2);
- g.addColorStop(0.7,'rgba(0,0,0,1)');g.addColorStop(0.96,'rgba(0,0,0,0)');
+ g.addColorStop(0.78,'rgba(0,0,0,1)');g.addColorStop(1.0,'rgba(0,0,0,0)');
  mctx.fillStyle=g;mctx.fillRect(-fw/2,-fh/2,fw,fh);
  fctx.globalCompositeOperation='destination-in';fctx.drawImage(mk,0,0);
  fctx.globalCompositeOperation='source-over';
