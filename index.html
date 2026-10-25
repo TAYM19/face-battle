@@ -570,8 +570,9 @@ function loadFaceApi(){
  if(_apiReady)return _apiReady;
  _apiReady=(async()=>{
   await loadScript('face-api.min.js');
-  try{await faceapi.nets.ssdMobilenetv1.loadFromUri('./');_model='ssd'}
-  catch(e){await faceapi.nets.tinyFaceDetector.loadFromUri('./');_model='tiny'}
+  try{await faceapi.tf.setBackend('cpu');await faceapi.tf.ready()}catch(e){}
+  try{await faceapi.nets.tinyFaceDetector.loadFromUri('./');_model='tiny'}
+  catch(e){await faceapi.nets.ssdMobilenetv1.loadFromUri('./');_model='ssd'}
   try{await faceapi.nets.faceLandmark68Net.loadFromUri('./')}catch(e){}
  })();
  return _apiReady;
