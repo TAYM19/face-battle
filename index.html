@@ -456,7 +456,12 @@ async function detectFaceE(img){
   const det=await faceapi.detectSingleFace(img,opts);
   if(!det)return null;
   const b=det.box;
-  return {ex:b.x+b.width/2,ey:b.y+b.height*0.5,erx:b.width*0.60,ery:b.height*0.62};
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+  const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
+  const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
+  const erx=Math.min(b.width*0.58,iw*0.44);
+  const ery=Math.min(b.height*0.60,ih*0.48);
+  return {ex,ey,erx,ery};
  }catch(e){return null}
 }
 function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
@@ -466,6 +471,7 @@ function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
   const dx=(x-cx)/rx,dy=(y-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
   if(d<r0||d>r1)continue;
+  if(skipTransparent&&dy<0.1)continue;
   const i=(y*w+x)*4,a=data[i+3];
   if(skipTransparent&&a<200)continue;
   rs+=data[i];gs+=data[i+1];bs+=data[i+2];n++;
@@ -481,7 +487,7 @@ async function composite(pi){
  const shot=await loadImg(p.shot);
  const d=p.det||{ex:shot.width/2,ey:shot.height*0.42,erx:shot.width*0.30,ery:shot.width*0.38};
  const fw=c.fw,fh=c.fh;
- const s0=Math.max(fw/(2*d.erx),fh/(2*d.ery))*1.08*(p.adj?s(p.adj):1);
+ const s0=Math.max(fw/(2*d.erx),fh/(2*d.ery))*1.14*(p.adj?s(p.adj):1);
  function s(a){return a&&a.s?a.s:1}
  const fc=document.createElement('canvas');fc.width=Math.round(fw);fc.height=Math.round(fh);
  const fctx=fc.getContext('2d');
