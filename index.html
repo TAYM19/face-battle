@@ -439,19 +439,21 @@ function loadImg(src){
 function loadScript(src){
  return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)});
 }
-let _apiReady=null;
+let _apiReady=null,_model=null;
 function loadFaceApi(){
  if(_apiReady)return _apiReady;
  _apiReady=(async()=>{
   await loadScript('face-api.min.js');
-  await faceapi.nets.tinyFaceDetector.loadFromUri('./');
+  try{await faceapi.nets.ssdMobilenetv1.loadFromUri('./');_model='ssd'}
+  catch(e){await faceapi.nets.tinyFaceDetector.loadFromUri('./');_model='tiny'}
  })();
  return _apiReady;
 }
 async function detectFaceE(img){
  try{
   await loadFaceApi();
-  const det=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.25}));
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.25}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.2});
+  const det=await faceapi.detectSingleFace(img,opts);
   if(!det)return null;
   const b=det.box;
   return {ex:b.x+b.width/2,ey:b.y+b.height*0.5,erx:b.width*0.60,ery:b.height*0.62};
