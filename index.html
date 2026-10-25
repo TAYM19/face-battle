@@ -842,8 +842,8 @@ async function hybridRealFace(aiUrl,shotUrl,charId){
      const i=(y*fw+x)*4;
      dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
     fctx.putImageData(fImg,0,0)}}}
- // fur wrap: stretch hood fur inward over the rim zone so no glow residue survives
- {const srcAll=ctx.getImageData(0,0,W,H).data;
+ // fur wrap: stretch hood fur inward over the rim zone so no glow residue survives (costume AI renders only)
+ if(!isAsset){const srcAll=ctx.getImageData(0,0,W,H).data;
   const R0=0.74,R1=1.30;
   const bx0=Math.max(0,(gh.ex-gh.erx*(R1+0.06))|0),by0=Math.max(0,(gh.ey-gh.ery*(R1+0.06))|0);
   const bx1=Math.min(W-1,Math.ceil(gh.ex+gh.erx*(R1+0.06))),by1=Math.min(H-1,Math.ceil(gh.ey+gh.ery*(R1+0.06)));
@@ -877,14 +877,15 @@ async function hybridRealFace(aiUrl,shotUrl,charId){
  // paste face recessed inside the opening; the hood fur wraps its boundary
  const layer=document.createElement('canvas');layer.width=W;layer.height=H;
  const lx=layer.getContext('2d');
- const PSC=0.86;
+ const PSC=isAsset?0.80:0.86;
  const pw=gh.erx*2*PSC,ph=gh.ery*2*PSC;
  lx.drawImage(fc,gh.ex-pw/2,gh.ey-ph/2,pw,ph);
  const mk=document.createElement('canvas');mk.width=W;mk.height=H;
  const mctx=mk.getContext('2d');
  mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx*PSC,gh.ery*PSC);
  const mg=mctx.createRadialGradient(0,0,0,0,0,1);
- mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.6,'rgba(0,0,0,1)');mg.addColorStop(0.96,'rgba(0,0,0,0)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ const e0=isAsset?0.5:0.6,e1=isAsset?1.0:0.96;
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(e0,'rgba(0,0,0,1)');mg.addColorStop(e1,'rgba(0,0,0,0)');mg.addColorStop(1,'rgba(0,0,0,0)');
  mctx.fillStyle=mg;
  mctx.fillRect(-1.2,-1.2,2.4,2.4);
  mctx.setTransform(1,0,0,1,0,0);
@@ -892,7 +893,8 @@ async function hybridRealFace(aiUrl,shotUrl,charId){
  lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
  lx.globalCompositeOperation='source-over';
  ctx.drawImage(layer,0,0);
- // soft inner shadow inside the opening for depth
+ // soft inner shadow inside the opening for depth (costume renders only)
+ if(!isAsset){
  ctx.save();
  ctx.translate(gh.ex,gh.ey);ctx.scale(gh.erx,gh.ery);
  const sg=ctx.createRadialGradient(0,0,0,0,0,1);
@@ -901,7 +903,7 @@ async function hybridRealFace(aiUrl,shotUrl,charId){
  sg.addColorStop(1,'rgba(25,12,4,0)');
  ctx.fillStyle=sg;
  ctx.fillRect(-1.1,-1.1,2.2,2.2);
- ctx.restore();
+ ctx.restore();}
  return cv.toDataURL('image/jpeg',0.92);
 }
 function downscaleImg(url,maxW,q){
