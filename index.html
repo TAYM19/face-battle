@@ -891,6 +891,17 @@ async function processFace(pi,url){
  }
  ov.querySelector('.rt').textContent='מזהה את הפנים...';
  ov.querySelector('.rs').textContent='שנייה אחת';
+ const c0=charOf(p);
+ const hy2=c0?await hybridRealFace(c0.id+'.webp',url,c0.id).catch(()=>null):null;
+ if(hy2){
+  const small=await downscaleImg(hy2,720,0.87);
+  p.comp=small;
+  const im=await loadImg(small);
+  const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+  chip.getContext('2d').drawImage(im,im.width*0.28,0,im.width*0.44,im.height*0.2,0,0,96,96);
+  p.face=chip.toDataURL('image/jpeg',0.85);
+  ov.remove();renderAdjust(pi);return;
+ }
  const img=await loadImg(url);
  p.det=await detectFaceE(img);
  await composite(pi);
