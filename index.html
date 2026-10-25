@@ -106,6 +106,113 @@ h1{font-size:30px;font-weight:900;text-align:center;letter-spacing:.5px}
  87%{transform:translateY(-7%) rotate(352deg) scale(.95,1.06)}
  100%{transform:translateY(0) rotate(360deg) scale(1,1)}
 }
+/* funny per-character dances */
+.d-sumo{animation-name:sumoD;animation-duration:2.6s}
+@keyframes sumoD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 12%{transform:translate(-4%,0) rotate(-4deg) scale(1.06,.9)}
+ 20%{transform:translate(-2%,-6%) rotate(0) scale(.96,1.05)}
+ 30%{transform:translate(4%,0) rotate(4deg) scale(1.08,.88)}
+ 42%{transform:translate(0,-8%) rotate(0) scale(.94,1.06)}
+ 52%{transform:translate(0,0) scale(1.12,.85)}
+ 60%{transform:scale(1.17,.82)}
+ 66%{transform:scale(1.1,.88)}
+ 72%{transform:scale(1.14,.85)}
+ 82%{transform:translateY(-4%) scale(.98,1.02)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.d-bodybuilder{animation-name:bodyD;animation-duration:2.2s}
+@keyframes bodyD{
+ 0%{transform:rotate(0) scale(1,1)}
+ 8%{transform:rotate(-8deg) scale(1.12,.92)}
+ 16%{transform:rotate(-8deg) scale(1.17,.89)}
+ 24%{transform:rotate(0) scale(1,1)}
+ 32%{transform:rotate(8deg) scale(1.12,.92)}
+ 40%{transform:rotate(8deg) scale(1.17,.89)}
+ 50%{transform:rotate(0) scale(1.05,.95)}
+ 58%{transform:translateY(-9%) scale(.95,1.08)}
+ 66%{transform:translateY(0) scale(1.14,.86)}
+ 74%{transform:scale(1.18,.83)}
+ 82%{transform:scale(1.1,.9)}
+ 100%{transform:rotate(0) scale(1,1)}
+}
+.d-ballerina{animation-name:ballD;animation-duration:3s;animation-timing-function:linear}
+@keyframes ballD{
+ 0%{transform:translateX(0) rotate(0) scale(1,1)}
+ 12%{transform:translateX(6%) rotate(90deg) scale(.95,1.04)}
+ 25%{transform:translateX(10%) rotate(180deg) scale(1,1)}
+ 37%{transform:translateX(6%) rotate(270deg) scale(.95,1.04)}
+ 50%{transform:translateX(0) rotate(360deg) scale(1.02,.98)}
+ 62%{transform:translateX(-6%) rotate(450deg) scale(.95,1.04)}
+ 75%{transform:translateX(-10%) rotate(540deg) scale(1,1)}
+ 87%{transform:translateX(-6%) rotate(630deg) scale(.95,1.04)}
+ 100%{transform:translateX(0) rotate(720deg) scale(1,1)}
+}
+.d-disco{animation-name:discoD;animation-duration:1.6s}
+@keyframes discoD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 12%{transform:translate(-5%,-4%) rotate(-6deg) scale(.97,1.03)}
+ 25%{transform:translate(0,-9%) rotate(0) scale(1,1.05)}
+ 37%{transform:translate(5%,-4%) rotate(6deg) scale(.97,1.03)}
+ 50%{transform:translate(0,0) rotate(0) scale(1.06,.92)}
+ 62%{transform:translate(-6%,-3%) rotate(-9deg) scale(.97,1.03)}
+ 75%{transform:translate(0,-7%) rotate(3deg) scale(1,1.04)}
+ 87%{transform:translate(6%,-3%) rotate(9deg) scale(.97,1.03)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.d-pirate{animation-name:pirD;animation-duration:2s}
+@keyframes pirD{
+ 0%{transform:translate(0,0) rotate(0)}
+ 10%{transform:translate(-4%,-8%) rotate(-8deg)}
+ 20%{transform:translate(-4%,0) rotate(-4deg)}
+ 30%{transform:translate(0,-2%) rotate(0) scale(1.05,.93)}
+ 42%{transform:translate(4%,-10%) rotate(8deg)}
+ 54%{transform:translate(4%,0) rotate(4deg)}
+ 64%{transform:translate(0,0) rotate(0) scale(1.07,.9)}
+ 72%{transform:translateY(-6%) rotate(-6deg)}
+ 80%{transform:translateY(0) rotate(0) scale(1.04,.94)}
+ 88%{transform:translateY(-3%) rotate(5deg)}
+ 100%{transform:translate(0,0) rotate(0)}
+}
+.d-superhero{animation-name:supD;animation-duration:2.8s}
+@keyframes supD{
+ 0%{transform:translateY(0) scale(1,1) rotate(0)}
+ 10%{transform:scale(1.06,.9)}
+ 22%{transform:translateY(-18%) scale(.92,1.12) rotate(-4deg)}
+ 30%{transform:translateY(-18%) scale(.95,1.08) rotate(4deg)}
+ 38%{transform:translateY(0) scale(1.14,.84)}
+ 46%{transform:scale(1.1,.9)}
+ 55%{transform:scale(1.05,.96) rotate(0)}
+ 62%{transform:rotate(-7deg) scale(1.1,.94)}
+ 72%{transform:rotate(7deg) scale(1.1,.94)}
+ 82%{transform:translateY(-5%) scale(.97,1.04)}
+ 100%{transform:translateY(0) scale(1,1) rotate(0)}
+}
+.d-rockstar{animation-name:rockD;animation-duration:1.4s;transform-origin:50% 60%}
+@keyframes rockD{
+ 0%{transform:rotate(-14deg) translateY(0)}
+ 20%{transform:rotate(12deg) translateY(2%)}
+ 40%{transform:rotate(-14deg)}
+ 60%{transform:rotate(12deg) translateY(2%)}
+ 70%{transform:rotate(-6deg) translateY(-8%) scale(.96,1.06)}
+ 80%{transform:rotate(6deg) translateY(-4%)}
+ 90%{transform:rotate(-10deg) translateY(0) scale(1.05,.93)}
+ 100%{transform:rotate(-14deg) translateY(0)}
+}
+.d-chicken{animation-name:chickD;animation-duration:1.8s}
+@keyframes chickD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 10%{transform:rotate(-8deg) scale(1.14,.94)}
+ 20%{transform:rotate(-8deg) scale(1.05,1)}
+ 30%{transform:translate(3%,-4%) rotate(6deg) scale(1.14,.94)}
+ 40%{transform:translate(3%,0) rotate(6deg) scale(1.05,1)}
+ 50%{transform:translate(0,-6%) rotate(0) scale(.96,1.05)}
+ 60%{transform:translate(-3%,0) rotate(-5deg) scale(1.12,.95)}
+ 70%{transform:translate(-3%,-3%) rotate(-5deg) scale(1.05,1)}
+ 80%{transform:translate(3%,-3%) rotate(5deg) scale(1.12,.95)}
+ 90%{transform:translate(0,0) rotate(0) scale(1.06,.94)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
 .sad{animation:sad 2.2s ease-in-out infinite;transform-origin:bottom center}
 @keyframes sad{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg) translateY(3px)}}
 .bubble{position:absolute;background:#fff;color:#241a52;font-weight:800;font-size:14.5px;padding:9px 16px;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap;z-index:5}
@@ -469,35 +576,24 @@ function loadFaceApi(){
  return _apiReady;
 }
 async function detectFaceE(img){
+ const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
  try{
   await loadFaceApi();
-  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.25}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.2});
-  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
-  try{
-   const det=await faceapi.detectSingleFace(img,opts).withFaceLandmarks();
-   if(!det)return null;
-   const lm=det.landmarks;
-   const jaw=lm.getJawOutline();
-   const xs=jaw.map(p=>p.x);
-   const minX=Math.min(...xs),maxX=Math.max(...xs);
-   const chinY=Math.max(...jaw.map(p=>p.y));
-   const browY=Math.min(...lm.getLeftEyeBrow().map(p=>p.y),...lm.getRightEyeBrow().map(p=>p.y));
-   const topY=browY-(chinY-browY)*0.42;
-   const ex=Math.min(Math.max((minX+maxX)/2,iw*0.05),iw*0.95);
-   const ey=Math.min(Math.max((topY+chinY)/2,ih*0.05),ih*0.95);
-   const erx=Math.min((maxX-minX)*0.62,iw*0.45);
-   const ery=Math.min((chinY-topY)*0.56,ih*0.48);
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.5}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.35});
+  const ds=await faceapi.detectAllFaces(img,opts);
+  const ok=ds.map(d=>d.box).filter(b=>b.width>iw*0.06&&b.height>ih*0.06&&b.width<iw*0.62&&b.height<ih*0.62&&b.x>-b.width*0.3&&b.y>-b.height*0.3&&b.x+b.width<iw*1.3&&b.y+b.height<ih*1.3&&b.height/b.width>0.85&&b.height/b.width<1.9);
+  if(ok.length){
+   ok.sort((a,b)=>b.width*b.height-a.width*a.height);
+   const b=ok[0];
+   const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
+   const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
+   const erx=Math.min(b.width*0.55,iw*0.4);
+   const ery=Math.min(b.height*0.62,ih*0.45);
    return {ex,ey,erx,ery};
-  }catch(e2){}
-  const det=await faceapi.detectSingleFace(img,opts);
-  if(!det)return null;
-  const b=det.box;
-  const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
-  const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
-  const erx=Math.min(b.width*0.52,iw*0.42);
-  const ery=Math.min(b.height*0.55,ih*0.46);
-  return {ex,ey,erx,ery};
- }catch(e){return null}
+  }
+ }catch(e){}
+ // no reliable detection - typical selfie framing (face upper-center)
+ return {ex:iw*0.5,ey:ih*0.40,erx:iw*0.22,ery:ih*0.22};
 }
 function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
  let rs=0,gs=0,bs=0,n=0;
@@ -680,7 +776,8 @@ async function processFace(pi,url){
  ov.className='roundov';
  ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת עד דקה</div>';
  document.body.appendChild(ov);
- const aiImg=await aiEdit(pi,url);
+ let aiImg=await aiEdit(pi,url);
+ if(!aiImg)aiImg=await aiEdit(pi,url);
  if(aiImg){
   const hy=await hybridRealFace(aiImg,url).catch(()=>null);
   const small=await downscaleImg(hy||aiImg,720,0.87);
@@ -702,9 +799,10 @@ async function processFace(pi,url){
 /* ---------- overrides ---------- */
 function charBox(p,cls){
  const c=charOf(p);if(!c)return'';
- if(p.comp)return `<div class="charbox ${cls||''}"><img class="cimg" src="${p.comp}" alt="${c.name}"></div>`;
+ const dc=cls==='dance'?'dance d-'+c.id:(cls||'');
+ if(p.comp)return `<div class="charbox ${dc}"><img class="cimg" src="${p.comp}" alt="${c.name}"></div>`;
  const st=`left:${c.fx/c.w*100}%;top:${c.fy/c.h*100}%;width:${c.fw/c.w*100}%;aspect-ratio:${c.fw}/${c.fh}`;
- return `<div class="charbox ${cls||''}"><img class="cimg" src="${c.id}.webp" alt="${c.name}"><div class="face empty" style="${st}"></div></div>`;
+ return `<div class="charbox ${dc}"><img class="cimg" src="${c.id}.webp" alt="${c.name}"><div class="face empty" style="${st}"></div></div>`;
 }
 function renderAdjust(pi){
  S.screen='adj'+pi;
