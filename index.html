@@ -532,12 +532,12 @@ async function composite(pi){
  const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.4,true);
  const fImg=fctx.getImageData(0,0,fc.width,fc.height);
  let faceTone=null;
- {let rs=0,gs=0,bs=0,n=0;const dd=fImg.data,cx=fc.width/2,cy=fc.height*0.7,rr=fc.width*0.2;
+ {let rs=0,gs=0,bs=0,n=0;const dd=fImg.data,cx=fc.width/2,cy=fc.height*0.6,rr=fc.width*0.22;
   for(let y=Math.floor(cy-rr);y<cy+rr;y++)for(let x=Math.floor(cx-rr);x<cx+rr;x++){
    if(x<0||y<0||x>=fc.width||y>=fc.height)continue;
    const dx=(x-cx)/rr,dy=(y-cy)/rr;if(dx*dx+dy*dy>1)continue;
    const i=(y*fc.width+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
-   if(r<60||r<g*0.9||g<b*0.75)continue;
+   if(r<70||r<g*0.85||g<b*0.8)continue;
    rs+=r;gs+=g;bs+=b;n++}
   if(n>80)faceTone={r:rs/n,g:gs/n,b:bs/n}}
  if(neckTone&&faceTone){
@@ -548,7 +548,7 @@ async function composite(pi){
   for(let y=0;y<fc.height;y++)for(let x=0;x<fc.width;x++){
    const dx=(x-cx)/(fc.width/2),dy=(y-cy)/(fc.height/2);
    const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
-   const w=0.6+0.4*rad;
+   const w=0.78+0.22*rad;
    const i=(y*fc.width+x)*4;
    dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
   fctx.putImageData(fImg,0,0);
@@ -558,7 +558,7 @@ async function composite(pi){
  const mctx=mk.getContext('2d');
  mctx.translate(fc.width/2,fc.height/2);mctx.scale(1,fc.height/fc.width);
  const g=mctx.createRadialGradient(0,0,0,0,0,fc.width/2);
- g.addColorStop(0.85,'rgba(0,0,0,1)');g.addColorStop(0.99,'rgba(0,0,0,0)');
+ g.addColorStop(0.8,'rgba(0,0,0,1)');g.addColorStop(0.94,'rgba(0,0,0,0)');
  mctx.fillStyle=g;mctx.fillRect(-fc.width/2,-fc.width/2,fc.width,fc.width);
  fctx.globalCompositeOperation='destination-in';
  fctx.drawImage(mk,0,0,fc.width,fc.height);
