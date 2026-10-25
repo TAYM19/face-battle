@@ -459,8 +459,8 @@ async function detectFaceE(img){
   const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
   const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
   const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
-  const erx=Math.min(b.width*0.58,iw*0.44);
-  const ery=Math.min(b.height*0.60,ih*0.48);
+  const erx=Math.min(b.width*0.52,iw*0.42);
+  const ery=Math.min(b.height*0.55,ih*0.46);
   return {ex,ey,erx,ery};
  }catch(e){return null}
 }
@@ -496,7 +496,7 @@ async function composite(pi){
  // tone match: character neck ring vs face edge ring
  const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.35,true);
  const fImg=fctx.getImageData(0,0,fc.width,fc.height);
- const faceTone=ringMean(fImg.data,fc.width,fc.height,fc.width/2,fc.height/2,fc.width/2,fc.height/2,0.7,0.9,false);
+ const faceTone=ringMean(fImg.data,fc.width,fc.height,fc.width/2,fc.height*0.72,fc.width*0.18,fc.width*0.18,0,1,false);
  if(neckTone&&faceTone){
   const gr=1+(Math.min(1.5,Math.max(0.65,neckTone.r/faceTone.r))-1)*0.55;
   const gg=1+(Math.min(1.5,Math.max(0.65,neckTone.g/faceTone.g))-1)*0.55;
@@ -510,7 +510,7 @@ async function composite(pi){
  const mctx=mk.getContext('2d');
  mctx.translate(fc.width/2,fc.height/2);mctx.scale(1,fc.height/fc.width);
  const g=mctx.createRadialGradient(0,0,0,0,0,fc.width/2);
- g.addColorStop(0.78,'rgba(0,0,0,1)');g.addColorStop(0.97,'rgba(0,0,0,0)');
+ g.addColorStop(0.85,'rgba(0,0,0,1)');g.addColorStop(0.99,'rgba(0,0,0,0)');
  mctx.fillStyle=g;mctx.fillRect(-fc.width/2,-fc.width/2,fc.width,fc.width);
  fctx.globalCompositeOperation='destination-in';
  fctx.drawImage(mk,0,0,fc.width,fc.height);
