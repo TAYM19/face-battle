@@ -426,17 +426,203 @@ function renderWin(){
   <button class="cta" id="re" style="margin-top:18px">רימאטצ'י - שהוא יתנצח</button>
   <button class="linkbtn" id="chg">תחלפו דמויות</button>`;
  document.getElementById('re').onclick=()=>{S.score=[0,0];S.round=1;S.seriesWinner=null;save();S.game==='rps'?startRpsRound():startTttRound()};
- document.getElementById('chg').onclick=()=>{S.score=[0,0];S.round=1;S.seriesWinner=null;S.sel=null;S.players.forEach(p=>{p.char=null;p.face=null});save();renderSelect(0)};
+ document.getElementById('chg').onclick=()=>{S.score=[0,0];S.round=1;S.seriesWinner=null;S.sel=null;S.players.forEach(p=>{p.char=null;p.face=null;p.comp=null;p.shot=null;p.det=null});save();renderSelect(0)};
 }
+
+/* ---------- auto face pipeline (v2) ---------- */
+const _imgCache={};
+function loadImg(src){
+ if(_imgCache[src])return _imgCache[src];
+ _imgCache[src]=new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+ return _imgCache[src];
+}
+function loadScript(src){
+ return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)});
+}
+let _apiReady=null;
+function loadFaceApi(){
+ if(_apiReady)return _apiReady;
+ _apiReady=(async()=>{
+  await loadScript('face-api.min.js');
+  await faceapi.nets.tinyFaceDetector.loadFromUri('./');
+ })();
+ return _apiReady;
+}
+async function detectFaceE(img){
+ try{
+  await loadFaceApi();
+  const det=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.25}));
+  if(!det)return null;
+  const b=det.box;
+  return {ex:b.x+b.width/2,ey:b.y+b.height*0.5,erx:b.width*0.60,ery:b.height*0.62};
+ }catch(e){return null}
+}
+function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
+ let rs=0,gs=0,bs=0,n=0;
+ const x0=Math.max(0,Math.floor(cx-rx*r1)),x1=Math.min(w-1,Math.ceil(cx+rx*r1));
+ const y0=Math.max(0,Math.floor(cy-ry*r1)),y1=Math.min(h-1,Math.ceil(cy+ry*r1));
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+  const dx=(x-cx)/rx,dy=(y-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<r0||d>r1)continue;
+  const i=(y*w+x)*4,a=data[i+3];
+  if(skipTransparent&&a<200)continue;
+  rs+=data[i];gs+=data[i+1];bs+=data[i+2];n++;
+ }
+ return n?{r:rs/n,g:gs/n,b:bs/n}:null;
+}
+async function composite(pi){
+ const p=S.players[pi],c=charOf(p);
+ const spr=await loadImg(c.id+'.webp');
+ const cv=document.createElement('canvas');cv.width=c.w;cv.height=c.h;
+ const ctx=cv.getContext('2d');
+ ctx.drawImage(spr,0,0);
+ const shot=await loadImg(p.shot);
+ const d=p.det||{ex:shot.width/2,ey:shot.height*0.42,erx:shot.width*0.30,ery:shot.width*0.38};
+ const fw=c.fw,fh=c.fh;
+ const s0=Math.max(fw/(2*d.erx),fh/(2*d.ery))*1.08*(p.adj?s(p.adj):1);
+ function s(a){return a&&a.s?a.s:1}
+ const fc=document.createElement('canvas');fc.width=Math.round(fw);fc.height=Math.round(fh);
+ const fctx=fc.getContext('2d');
+ const offX=(p.adj?p.adj.x:0)/100*fw,offY=(p.adj?p.adj.y:0)/100*fh;
+ fctx.drawImage(shot,fw/2-d.ex*s0+offX,fh/2-d.ey*s0+offY,shot.width*s0,shot.height*s0);
+ // tone match: character neck ring vs face edge ring
+ const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.35,true);
+ const fImg=fctx.getImageData(0,0,fc.width,fc.height);
+ const faceTone=ringMean(fImg.data,fc.width,fc.height,fc.width/2,fc.height/2,fc.width/2,fc.height/2,0.7,0.9,false);
+ if(neckTone&&faceTone){
+  const gr=1+(Math.min(1.5,Math.max(0.65,neckTone.r/faceTone.r))-1)*0.55;
+  const gg=1+(Math.min(1.5,Math.max(0.65,neckTone.g/faceTone.g))-1)*0.55;
+  const gb=1+(Math.min(1.5,Math.max(0.65,neckTone.b/faceTone.b))-1)*0.55;
+  const dd=fImg.data;
+  for(let i=0;i<dd.length;i+=4){dd[i]*=gr;dd[i+1]*=gg;dd[i+2]*=gb}
+  fctx.putImageData(fImg,0,0);
+ }
+ // elliptical feather mask
+ const mk=document.createElement('canvas');mk.width=fc.width;mk.height=fc.height;
+ const mctx=mk.getContext('2d');
+ mctx.translate(fc.width/2,fc.height/2);mctx.scale(1,fc.height/fc.width);
+ const g=mctx.createRadialGradient(0,0,0,0,0,fc.width/2);
+ g.addColorStop(0.78,'rgba(0,0,0,1)');g.addColorStop(0.97,'rgba(0,0,0,0)');
+ mctx.fillStyle=g;mctx.fillRect(-fc.width/2,-fc.width/2,fc.width,fc.width);
+ fctx.globalCompositeOperation='destination-in';
+ fctx.drawImage(mk,0,0,fc.width,fc.height);
+ fctx.globalCompositeOperation='source-over';
+ ctx.drawImage(fc,c.fx-fw/2,c.fy-fh/2);
+ // chip face crop (square around face)
+ const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+ chip.getContext('2d').drawImage(fc,fc.width*0.2,fc.height*0.15,fc.width*0.6,fc.height*0.6,0,0,96,96);
+ p.face=chip.toDataURL('image/jpeg',0.85);
+ p.comp=cv.toDataURL('image/webp',0.92);
+}
+async function processFace(pi,url){
+ S.players[pi].shot=url;
+ S.players[pi].det=null;
+ S.players[pi].adj={x:0,y:0,s:1};
+ const ov=document.createElement('div');
+ ov.className='roundov';
+ ov.innerHTML='<div class="rt" style="margin-top:0">מזהה את הפנים...</div><div class="rs">שנייה אחת</div>';
+ document.body.appendChild(ov);
+ const img=await loadImg(url);
+ S.players[pi].det=await detectFaceE(img);
+ await composite(pi);
+ ov.remove();
+ renderAdjust(pi);
+}
+/* ---------- overrides ---------- */
+function charBox(p,cls){
+ const c=charOf(p);if(!c)return'';
+ if(p.comp)return `<div class="charbox ${cls||''}"><img class="cimg" src="${p.comp}" alt="${c.name}"></div>`;
+ const st=`left:${c.fx/c.w*100}%;top:${c.fy/c.h*100}%;width:${c.fw/c.w*100}%;aspect-ratio:${c.fw}/${c.fh}`;
+ return `<div class="charbox ${cls||''}"><img class="cimg" src="${c.id}.webp" alt="${c.name}"><div class="face empty" style="${st}"></div></div>`;
+}
+function renderAdjust(pi){
+ S.screen='adj'+pi;
+ const p=S.players[pi],c=charOf(p);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">הפנים על הדמות!</h1></div>
+  <div class="sub">${p.det?'זיהינו והדבקנו אוטומטית - אפשר ללטש בגרירה':'לא זיהינו פנים - סדרו ידנית בגרירה'}</div>
+  <div class="adjwrap" id="aw"><img id="compImg" src="${p.comp}" style="width:100%;display:block;touch-action:none;cursor:grab"></div>
+  <div class="zoomrow"><span>זום</span><input type="range" id="zm" min="0.6" max="2.2" step="0.01" value="${p.adj.s}"></div>
+  <button class="cta" id="ok">יאללה, מושלם</button>
+  <button class="linkbtn" id="re">צלם / העלה מחדש</button>`;
+ const im=document.getElementById('compImg');
+ let drag=null,pending=false;
+ const refresh=async()=>{if(pending)return;pending=true;await composite(pi);im.src=p.comp;pending=false};
+ im.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ax:p.adj.x,ay:p.adj.y};im.setPointerCapture(e.pointerId)};
+ im.onpointermove=e=>{
+  if(!drag)return;
+  const r=im.getBoundingClientRect();
+  p.adj.x=drag.ax+(e.clientX-drag.x)/r.width*100*(c.w/c.fw);
+  p.adj.y=drag.ay+(e.clientY-drag.y)/r.height*100*(c.h/c.fh);
+  refresh();
+ };
+ im.onpointerup=()=>drag=null;
+ document.getElementById('zm').oninput=e=>{p.adj.s=+e.target.value;refresh()};
+ document.getElementById('ok').onclick=()=>{save();pi===0?renderVeil(1):renderMenu()};
+ document.getElementById('re').onclick=()=>renderCam(pi);
+}
+async function renderCam(pi){
+ S.screen='cam'+pi;
+ const c=charOf(S.players[pi]);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">צלם סלפי</h1></div>
+  <div class="sub">הפנים שלך יתלבשו על <b style="color:#f6c445">${c.name}</b> - אנחנו מדביקים אוטומטית!</div>
+  <div class="camwrap"><video id="pv" playsinline autoplay muted></video></div>
+  <div class="shoot"><button class="shutter" id="sh" aria-label="צלם"></button></div>
+  <button class="linkbtn" id="up">או העלה תמונה מהגלריה</button>
+  <div class="camhint" id="err"></div>`;
+ const v=document.getElementById('pv');
+ try{
+  stopCam();
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:1280}},audio:false});
+  v.srcObject=stream;
+ }catch(e){
+  document.getElementById('err').textContent='המצלמה לא זמינה כאן - אפשר להעלות תמונה מהגלריה';
+  document.getElementById('sh').style.display='none';
+ }
+ document.getElementById('sh').onclick=()=>{
+  const cv=document.getElementById('cap');
+  const vw=v.videoWidth||640,vh=v.videoHeight||480;
+  const side=Math.min(vw,vh);
+  cv.width=side;cv.height=side;
+  const ctx=cv.getContext('2d');
+  ctx.translate(side,0);ctx.scale(-1,1);
+  ctx.drawImage(v,(vw-side)/2,(vh-side)/2,side,side,0,0,side,side);
+  const url=cv.toDataURL('image/jpeg',.85);
+  stopCam();processFace(pi,url);
+ };
+ document.getElementById('up').onclick=()=>{
+  const f=document.getElementById('filepick');
+  f.onchange=()=>{
+   if(!f.files[0])return;
+   const r=new FileReader();
+   r.onload=()=>{shrink(r.result,url=>{stopCam();processFace(pi,url)})};
+   r.readAsDataURL(f.files[0]);f.value='';
+  };
+  f.click();
+ };
+}
+function shrink(url,cb){
+ const im=new Image();
+ im.onload=()=>{
+  const k=Math.min(1,760/Math.max(im.width,im.height));
+  const cv=document.getElementById('cap');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+  cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+  cb(cv.toDataURL('image/jpeg',.85));
+ };
+ im.src=url;
+}
+function save(){
+ try{localStorage.setItem('facebattle',JSON.stringify({players:[{name:S.players[0].name,char:S.players[0].char,comp:S.players[0].comp,face:S.players[0].face,shot:S.players[0].shot,det:S.players[0].det,adj:S.players[0].adj},{name:S.players[1].name,char:S.players[1].char,comp:S.players[1].comp,face:S.players[1].face,shot:S.players[1].shot,det:S.players[1].det,adj:S.players[1].adj}],score:S.score,game:S.game,round:S.round}))}catch(e){}
+}
+
 /* ---------- init ---------- */
 window.__g={S,renderMenu,renderSelect,renderAdjust,renderWin,endRound,startTttRound,startRpsRound};
 (function init(){
- if(S.players[1].face&&S.players[1].char){renderMenu()}
- else if(S.players[0].face&&S.players[0].char){renderSelect(1)}
+ if(S.players[1].comp&&S.players[1].char){renderMenu()}
+ else if(S.players[0].comp&&S.players[0].char){renderSelect(1)}
  else{renderSelect(0)}
 })();
 </script>
 </body>
 </html>
-
-<!-- v1 -->
