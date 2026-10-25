@@ -258,7 +258,7 @@ const AI_PROMPTS={
  rockstar:'a wild rockstar with crazy hair, leather jacket and ripped jeans, holding an electric guitar, tongue out',
  chicken:'a person in a silly full-body fluffy yellow chicken costume, wings spread, chicken feet, the costume hood frames the head and the beak is a small hat on top of the hood above the head'
 };
-const AI_STYLE='High quality 3D animated movie character render, modern Pixar-style animation, detailed materials and textures, cinematic soft studio lighting, exaggerated funny proportions, big expressive head. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
+const AI_STYLE='High quality 3D animated movie character render, modern Pixar-style animation, detailed materials and textures, cinematic soft studio lighting, exaggerated funny proportions. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
 
 const WIN_TAUNTS=['אני האלוף!','תראה איך אני רוקד!','אלוף. העולם.','מי הבוס? אני הבוס!','קל מדי...'];
 const LOSE_TAUNTS=['...לא יכול להיות','רימאטץ\'. עכשיו.','זה לא נגמר ככה','דרישת בדיקה!','נגמר לך המזל'];
@@ -671,7 +671,7 @@ async function composite(pi){
 async function aiEdit(pi,url){
  const c=charOf(S.players[pi]);if(!c)return null;
  const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
- const prompt=`Full-body portrait of a cartoon character: ${desc}. CRITICAL: the character's head is a solid flat bright green (#00FF00) smooth featureless oval - pure chroma-key green, no face, no eyes, no mouth, no hair, exactly one solid green oval head on the neck, and no other green anywhere in the image. ${AI_STYLE}`;
+ const prompt=`Full-body portrait of a cartoon character: ${desc}. CRITICAL: the character's head is a solid flat bright green (#00FF00) smooth featureless oval - pure chroma-key green, no face, no eyes, no mouth, no hair, exactly one solid green oval head on the neck, and no other green anywhere in the image. Do NOT keep the input person's face, head or hair anywhere - replace the head entirely with the green oval. Replace the input photo's background completely with the plain background. ${AI_STYLE}`;
  try{
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),70000);
   const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:url,prompt}),signal:ctl.signal});
