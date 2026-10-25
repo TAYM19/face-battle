@@ -593,7 +593,7 @@ async function detectFaceE(img){
   }
  }catch(e){}
  // no reliable detection - typical selfie framing (face upper-center)
- return {ex:iw*0.5,ey:ih*0.40,erx:iw*0.22,ery:ih*0.22};
+ return {ex:iw*0.5,ey:ih*0.42,erx:iw*0.22,ery:ih*0.20};
 }
 function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
  let rs=0,gs=0,bs=0,n=0;
