@@ -803,17 +803,24 @@ async function hybridRealFace(aiUrl,shotUrl){
   for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){
    const dx=(x-gh.ex)/gh.erx,dy=(y-gh.ey)/gh.ery;
    const t=Math.sqrt(dx*dx+dy*dy);
-   if(t<R0||t>R1)continue;
+   if(t<R0)continue;
+   const ux=dx/t,uy=dy/t;
+   const R1a=R1-0.11*Math.max(0,-uy)*Math.max(0,-uy);
+   if(t>R1a)continue;
    const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
    const ts=1.17+(j<0?-j:j)*0.10;
-   const ux=dx/t,uy=dy/t;
-   const sx=Math.round(gh.ex+ux*gh.erx*ts),sy=Math.round(gh.ey+uy*gh.ery*ts);
-   if(sx<0||sy<0||sx>=W||sy>=H)continue;
-   const si=(sy*W+sx)*4,di=((y-by0)*rw+(x-bx0))*4;
-   const a=Math.min(1,(t-R0)/0.09)*Math.min(1,(R1-t)/0.08);
-   d[di]=d[di]*(1-a)+srcAll[si]*a;
-   d[di+1]=d[di+1]*(1-a)+srcAll[si+1]*a;
-   d[di+2]=d[di+2]*(1-a)+srcAll[si+2]*a;
+   const fx=gh.ex+ux*gh.erx*ts,fy=gh.ey+uy*gh.ery*ts;
+   const sx0=Math.floor(fx),sy0=Math.floor(fy);
+   if(sx0<0||sy0<0||sx0>=W-1||sy0>=H-1)continue;
+   const ax=fx-sx0,ay=fy-sy0;
+   const sx1=sx0+1,sy1=sy0+1;
+   const i00=(sy0*W+sx0)*4,i10=(sy0*W+sx1)*4,i01=(sy1*W+sx0)*4,i11=(sy1*W+sx1)*4;
+   const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
+   const di=((y-by0)*rw+(x-bx0))*4;
+   const a=Math.min(1,(t-R0)/0.09)*Math.min(1,(R1a-t)/0.08);
+   d[di]=d[di]*(1-a)+(srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11)*a;
+   d[di+1]=d[di+1]*(1-a)+(srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11)*a;
+   d[di+2]=d[di+2]*(1-a)+(srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11)*a;
   }
   ctx.putImageData(reg,bx0,by0)}
  // paste face recessed inside the opening; the hood fur wraps its boundary
