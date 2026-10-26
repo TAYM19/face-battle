@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>קרב הפרצופים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Heebo',system-ui,sans-serif;color:#fff;
+  background:linear-gradient(160deg,#251c52 0%,#1a1440 45%,#150f33 100%);
+  min-height:100vh;overflow-x:hidden;
+  user-select:none;-webkit-user-select:none;
+}
+#app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:18px 20px 28px;position:relative}
+h1{font-size:30px;font-weight:900;text-align:center;letter-spacing:.5px}
+.sub{text-align:center;color:#cfc8f2;font-size:15px;margin-top:8px;line-height:1.5}
+.steps{text-align:center;color:#b9b1e6;font-size:13.5px;margin-top:10px}
+.steps b{color:#f6c445;font-weight:800}
+.cta{
+  display:block;width:100%;border:none;cursor:pointer;
+  background:linear-gradient(180deg,#f8cd55,#f0a91e);
+  color:#3a2503;font-family:inherit;font-weight:800;font-size:19px;
+  padding:16px;border-radius:16px;margin-top:auto;
+  box-shadow:0 8px 24px rgba(240,169,30,.35),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.cta:active{transform:scale(.98)}
+.cta:disabled{opacity:.4;box-shadow:none}
+.linkbtn{display:block;margin:14px auto 0;background:none;border:none;color:#a99ee0;font-family:inherit;font-size:14px;text-decoration:underline;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.card{
+  position:relative;border-radius:18px;border:2px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.05);padding:10px 6px 8px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;transition:border-color .15s,box-shadow .15s;
+}
+.card img{height:112px;max-width:100%;object-fit:contain;pointer-events:none}
+.card .nm{margin-top:6px;font-weight:700;font-size:16px;color:#e9e4ff}
+.card.sel{border-color:#f6c445;box-shadow:0 0 0 3px rgba(246,196,69,.35),0 6px 18px rgba(246,196,69,.18);background:rgba(246,196,69,.08)}
+.card .check{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:#f6c445;display:none;align-items:center;justify-content:center}
+.card.sel .check{display:flex}
+.card .check svg{width:14px;height:14px}
+.card.taken{opacity:.35;pointer-events:none}
+.namefield{width:100%;margin-top:14px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 14px;color:#fff;font-family:inherit;font-size:15px;outline:none}
+.namefield:focus{border-color:#f6c445}
+.namefield::placeholder{color:#8f86c0}
+/* character with face */
+.charbox{position:relative;display:inline-block}
+.charbox>img.cimg{display:block;width:100%}
+.face{position:absolute;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;background:#e8e0d0}
+.face img{width:100%;height:100%;object-fit:cover;transform-origin:center;pointer-events:none}
+.face.empty{background:#f2e7d3}
+/* camera */
+.camwrap{position:relative;margin-top:16px;border-radius:20px;overflow:hidden;background:#000;aspect-ratio:3/4}
+.camwrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.camhint{text-align:center;color:#cfc8f2;font-size:14px;margin-top:12px}
+.shoot{display:flex;justify-content:center;margin-top:16px}
+.shutter{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer;position:relative}
+.shutter::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#f6c445}
+/* adjust */
+.adjwrap{position:relative;margin:14px auto 0;width:100%;max-width:340px}
+.adjwrap .charbox{width:100%}
+.zoomrow{display:flex;align-items:center;gap:12px;margin-top:14px;color:#cfc8f2;font-size:13px}
+.zoomrow input{flex:1;accent-color:#f6c445}
+/* scoreboard */
+.scorebar{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.pchip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.14);border-radius:999px;padding:5px 14px 5px 8px}
+.pchip.me{border-color:#f6c445;box-shadow:0 0 12px rgba(246,196,69,.35)}
+.pchip img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #f6c445}
+.pchip .pn{font-weight:700;font-size:14px}
+.scorebig{font-size:30px;font-weight:900;color:#f6c445;letter-spacing:2px}
+/* ttt */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);border-radius:20px;padding:16px;margin:14px auto 0;width:100%;max-width:330px}
+.cell{aspect-ratio:1;border-radius:14px;background:#241a52;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900}
+.cell.x{color:#f6c445}.cell.o{color:#7ec8ff}
+.cell.win{background:rgba(246,196,69,.25);box-shadow:0 0 14px rgba(246,196,69,.5)}
+.turnnote{text-align:center;color:#cfc8f2;font-size:14px;margin-top:14px}
+.turnnote b{color:#f6c445}
+/* rps */
+.rpsrow{display:flex;gap:12px;margin-top:20px}
+.rpsbtn{flex:1;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);border-radius:16px;padding:18px 6px;cursor:pointer;color:#fff;font-family:inherit;font-size:17px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:8px}
+.rpsbtn svg{width:44px;height:44px}
+.rpsbtn:active{border-color:#f6c445}
+.rpsreveal{display:flex;justify-content:space-around;align-items:center;margin-top:22px}
+.rpspick{text-align:center}
+.rpspick .rk{font-size:15px;font-weight:800;margin-top:8px;color:#f6c445}
+/* veil */
+.veil{margin-top:60px;text-align:center}
+.veil .big{font-size:24px;font-weight:800;line-height:1.6}
+/* win */
+.winstage{position:relative;margin-top:6px;min-height:330px}
+.winnerbox{position:absolute;right:-14px;bottom:0;width:64%}
+.loserbox{position:absolute;left:-4px;bottom:0;width:37%;opacity:.95}
+.dance{animation:dance 2.4s ease-in-out infinite;transform-origin:bottom center}
+@keyframes dance{
+ 0%{transform:translateY(0) rotate(0) scale(1,1)}
+ 10%{transform:translateY(-6%) rotate(-7deg) scale(.96,1.05)}
+ 20%{transform:translateY(0) rotate(0) scale(1.07,.9)}
+ 30%{transform:translateY(-8%) rotate(7deg) scale(.95,1.07)}
+ 40%{transform:translateY(0) rotate(0) scale(1.08,.9)}
+ 50%{transform:translateY(-5%) rotate(0) scale(1,1)}
+ 62%{transform:translateY(-5%) rotate(180deg) scale(.92,1.08)}
+ 74%{transform:translateY(0) rotate(360deg) scale(1.06,.94)}
+ 87%{transform:translateY(-7%) rotate(352deg) scale(.95,1.06)}
+ 100%{transform:translateY(0) rotate(360deg) scale(1,1)}
+}
+/* funny per-character dances */
+.d-sumo{animation-name:sumoD;animation-duration:2.6s}
+@keyframes sumoD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 12%{transform:translate(-4%,0) rotate(-4deg) scale(1.06,.9)}
+ 20%{transform:translate(-2%,-6%) rotate(0) scale(.96,1.05)}
+ 30%{transform:translate(4%,0) rotate(4deg) scale(1.08,.88)}
+ 42%{transform:translate(0,-8%) rotate(0) scale(.94,1.06)}
+ 52%{transform:translate(0,0) scale(1.12,.85)}
+ 60%{transform:scale(1.17,.82)}
+ 66%{transform:scale(1.1,.88)}
+ 72%{transform:scale(1.14,.85)}
+ 82%{transform:translateY(-4%) scale(.98,1.02)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.d-bodybuilder{animation-name:bodyD;animation-duration:2.2s}
+@keyframes bodyD{
+ 0%{transform:rotate(0) scale(1,1)}
+ 8%{transform:rotate(-8deg) scale(1.12,.92)}
+ 16%{transform:rotate(-8deg) scale(1.17,.89)}
+ 24%{transform:rotate(0) scale(1,1)}
+ 32%{transform:rotate(8deg) scale(1.12,.92)}
+ 40%{transform:rotate(8deg) scale(1.17,.89)}
+ 50%{transform:rotate(0) scale(1.05,.95)}
+ 58%{transform:translateY(-9%) scale(.95,1.08)}
+ 66%{transform:translateY(0) scale(1.14,.86)}
+ 74%{transform:scale(1.18,.83)}
+ 82%{transform:scale(1.1,.9)}
+ 100%{transform:rotate(0) scale(1,1)}
+}
+.d-ballerina{animation-name:ballD;animation-duration:3s;animation-timing-function:linear}
+@keyframes ballD{
+ 0%{transform:translateX(0) rotate(0) scale(1,1)}
+ 12%{transform:translateX(6%) rotate(90deg) scale(.95,1.04)}
+ 25%{transform:translateX(10%) rotate(180deg) scale(1,1)}
+ 37%{transform:translateX(6%) rotate(270deg) scale(.95,1.04)}
+ 50%{transform:translateX(0) rotate(360deg) scale(1.02,.98)}
+ 62%{transform:translateX(-6%) rotate(450deg) scale(.95,1.04)}
+ 75%{transform:translateX(-10%) rotate(540deg) scale(1,1)}
+ 87%{transform:translateX(-6%) rotate(630deg) scale(.95,1.04)}
+ 100%{transform:translateX(0) rotate(720deg) scale(1,1)}
+}
+.d-disco{animation-name:discoD;animation-duration:1.6s}
+@keyframes discoD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 12%{transform:translate(-5%,-4%) rotate(-6deg) scale(.97,1.03)}
+ 25%{transform:translate(0,-9%) rotate(0) scale(1,1.05)}
+ 37%{transform:translate(5%,-4%) rotate(6deg) scale(.97,1.03)}
+ 50%{transform:translate(0,0) rotate(0) scale(1.06,.92)}
+ 62%{transform:translate(-6%,-3%) rotate(-9deg) scale(.97,1.03)}
+ 75%{transform:translate(0,-7%) rotate(3deg) scale(1,1.04)}
+ 87%{transform:translate(6%,-3%) rotate(9deg) scale(.97,1.03)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.d-pirate{animation-name:pirD;animation-duration:2s}
+@keyframes pirD{
+ 0%{transform:translate(0,0) rotate(0)}
+ 10%{transform:translate(-4%,-8%) rotate(-8deg)}
+ 20%{transform:translate(-4%,0) rotate(-4deg)}
+ 30%{transform:translate(0,-2%) rotate(0) scale(1.05,.93)}
+ 42%{transform:translate(4%,-10%) rotate(8deg)}
+ 54%{transform:translate(4%,0) rotate(4deg)}
+ 64%{transform:translate(0,0) rotate(0) scale(1.07,.9)}
+ 72%{transform:translateY(-6%) rotate(-6deg)}
+ 80%{transform:translateY(0) rotate(0) scale(1.04,.94)}
+ 88%{transform:translateY(-3%) rotate(5deg)}
+ 100%{transform:translate(0,0) rotate(0)}
+}
+.d-superhero{animation-name:supD;animation-duration:2.8s}
+@keyframes supD{
+ 0%{transform:translateY(0) scale(1,1) rotate(0)}
+ 10%{transform:scale(1.06,.9)}
+ 22%{transform:translateY(-18%) scale(.92,1.12) rotate(-4deg)}
+ 30%{transform:translateY(-18%) scale(.95,1.08) rotate(4deg)}
+ 38%{transform:translateY(0) scale(1.14,.84)}
+ 46%{transform:scale(1.1,.9)}
+ 55%{transform:scale(1.05,.96) rotate(0)}
+ 62%{transform:rotate(-7deg) scale(1.1,.94)}
+ 72%{transform:rotate(7deg) scale(1.1,.94)}
+ 82%{transform:translateY(-5%) scale(.97,1.04)}
+ 100%{transform:translateY(0) scale(1,1) rotate(0)}
+}
+.d-rockstar{animation-name:rockD;animation-duration:1.4s;transform-origin:50% 60%}
+@keyframes rockD{
+ 0%{transform:rotate(-14deg) translateY(0)}
+ 20%{transform:rotate(12deg) translateY(2%)}
+ 40%{transform:rotate(-14deg)}
+ 60%{transform:rotate(12deg) translateY(2%)}
+ 70%{transform:rotate(-6deg) translateY(-8%) scale(.96,1.06)}
+ 80%{transform:rotate(6deg) translateY(-4%)}
+ 90%{transform:rotate(-10deg) translateY(0) scale(1.05,.93)}
+ 100%{transform:rotate(-14deg) translateY(0)}
+}
+.d-chicken{animation-name:chickD;animation-duration:1.8s}
+@keyframes chickD{
+ 0%{transform:translate(0,0) rotate(0) scale(1,1)}
+ 10%{transform:rotate(-8deg) scale(1.14,.94)}
+ 20%{transform:rotate(-8deg) scale(1.05,1)}
+ 30%{transform:translate(3%,-4%) rotate(6deg) scale(1.14,.94)}
+ 40%{transform:translate(3%,0) rotate(6deg) scale(1.05,1)}
+ 50%{transform:translate(0,-6%) rotate(0) scale(.96,1.05)}
+ 60%{transform:translate(-3%,0) rotate(-5deg) scale(1.12,.95)}
+ 70%{transform:translate(-3%,-3%) rotate(-5deg) scale(1.05,1)}
+ 80%{transform:translate(3%,-3%) rotate(5deg) scale(1.12,.95)}
+ 90%{transform:translate(0,0) rotate(0) scale(1.06,.94)}
+ 100%{transform:translate(0,0) rotate(0) scale(1,1)}
+}
+.sad{animation:sad 2.2s ease-in-out infinite;transform-origin:bottom center}
+@keyframes sad{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg) translateY(3px)}}
+.bubble{position:absolute;background:#fff;color:#241a52;font-weight:800;font-size:14.5px;padding:9px 16px;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap;z-index:5}
+.bubble::after{content:'';position:absolute;bottom:-7px;right:26px;border:8px solid transparent;border-top-color:#fff;border-bottom:none}
+.confetto{position:absolute;width:9px;height:14px;border-radius:2px;top:-20px;animation:fall linear infinite;z-index:1}
+@keyframes fall{to{transform:translateY(120vh) rotate(720deg)}}
+.winline{text-align:center;margin-top:14px}
+.winline .t1{font-size:23px;font-weight:900;color:#f6c445}
+.winline .t2{font-size:15px;color:#cfc8f2;margin-top:5px}
+.roundov{position:fixed;inset:0;background:rgba(12,8,32,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:24px;text-align:center}
+.roundov .charbox{width:150px}
+.roundov .rt{font-size:24px;font-weight:900;margin-top:16px;color:#f6c445}
+.roundov .rs{font-size:15px;color:#cfc8f2;margin-top:6px}
+.hidden{display:none!important}
+.cta.sticky{position:sticky;bottom:14px;margin-top:14px}
+.hdr{display:flex;align-items:center;justify-content:center;position:relative}
+.backbtn{position:absolute;right:0;background:rgba(255,255,255,.08);border:none;color:#cfc8f2;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:13.5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="filepick" accept="image/*" class="hidden">
+<video id="cam" playsinline autoplay muted class="hidden"></video>
+<canvas id="cap" class="hidden"></canvas>
+<script>
+const HUMAN_CHARS={sumo:1,bodybuilder:1,ballerina:1,disco:1,pirate:1,superhero:1,rockstar:1};
+const CHARS=[
+ {id:'sumo',name:'סומו',w:378,h:470,fx:231,fy:66,fw:100,fh:112},
+ {id:'bodybuilder',name:'שרירן',w:311,h:475,fx:169,fy:70,fw:100,fh:110},
+ {id:'ballerina',name:'בלרינה',w:241,h:479,fx:120,fy:82,fw:80,fh:88},
+ {id:'disco',name:'דיסקו',w:296,h:484,fx:154,fy:90,fw:88,fh:95},
+ {id:'pirate',name:'פיראט',w:332,h:487,fx:191,fy:70,fw:95,fh:100},
+ {id:'superhero',name:'גיבור על',w:365,h:471,fx:214,fy:60,fw:100,fh:105},
+ {id:'rockstar',name:'רוקסטאר',w:384,h:476,fx:181,fy:74,fw:90,fh:95},
+ {id:'chicken',name:'תרנגול',w:365,h:479,fx:189,fy:94,fw:96,fh:100},
+]
+const AI_PROMPTS={
+ sumo:'a funny chubby sumo wrestler wearing a dark mawashi belt, arms spread wide, cheerful, barefoot',
+ bodybuilder:'a funny bodybuilder with huge exaggerated muscles flexing both arms, wearing tiny posing trunks, confident grin',
+ ballerina:'a graceful ballerina in a pink tutu and pointe shoes, arms raised above head in fifth position, one leg lifted',
+ disco:'a funky 1970s disco dancer with a big afro, sparkly sequin jumpsuit, one finger pointing up, platform shoes',
+ pirate:'a cartoon pirate with a big hat, eyepatch, striped shirt and boots, holding a cutlass, parrot optional',
+ superhero:'a superhero in a bright cape and tights with an emblem on the chest, fists on hips, chest puffed out',
+ rockstar:'a wild rockstar with crazy hair, leather jacket and ripped jeans, holding an electric guitar, tongue out',
+ chicken:'a person in a silly full-body fluffy yellow chicken costume, wings spread, chicken feet, the fluffy costume hood frames the face on all sides, and a small red comb and tiny orange beak sit on top of the hood above the face'
+};
+const AI_STYLE='High quality 3D animated movie character render, modern Pixar-style animation, detailed materials and textures, cinematic soft studio lighting, exaggerated funny proportions. Full body, centered, standing, whole body visible head to toe. Plain solid flat very dark purple background (#1c1240), nothing else in the background, no text, no watermark, no frame.';
+
+const WIN_TAUNTS=['אני האלוף!','תראה איך אני רוקד!','אלוף. העולם.','מי הבוס? אני הבוס!','קל מדי...'];
+const LOSE_TAUNTS=['...לא יכול להיות','רימאטץ\'. עכשיו.','זה לא נגמר ככה','דרישת בדיקה!','נגמר לך המזל'];
+const WIN_SCORE=3;
+let S={
+ screen:'select1',
+ players:[
+  {name:'',char:null,face:null,adj:{x:0,y:0,s:1.15}},
+  {name:'',char:null,face:null,adj:{x:0,y:0,s:1.15}},
+ ],
+ sel:null, game:null, score:[0,0], round:1,
+ board:null, turn:0, rps:[null,null], seriesWinner:null, ti:0
+};
+try{const s=localStorage.getItem('facebattle');if(s){const o=JSON.parse(s);if(o&&o.players)S=Object.assign(S,o);}}catch(e){}
+function save(){try{localStorage.setItem('facebattle',JSON.stringify({players:S.players,score:S.score,game:S.game,round:S.round}))}catch(e){}}
+const app=document.getElementById('app');
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function charOf(p){return CHARS.find(c=>c.id===p.char)}
+function charBox(p,cls){
+ const c=charOf(p);if(!c)return'';
+ const st=`left:${c.fx/c.w*100}%;top:${c.fy/c.h*100}%;width:${c.fw/c.w*100}%;aspect-ratio:${c.fw}/${c.fh}`;
+ const inner=p.face?`<img src="${p.face}" style="transform:translate(${p.adj.x}%,${p.adj.y}%) scale(${p.adj.s})">`:'';
+ return `<div class="charbox ${cls||''}"><img class="cimg" src="${c.id}.webp" alt="${c.name}"><div class="face${p.face?'':' empty'}" style="${st}">${inner}</div></div>`;
+}
+function pName(i){return S.players[i].name||('שחקן '+(i+1))}
+function scoreBar(active){
+ return `<div class="scorebar">
+  <div class="pchip${active===1?' me':''}">${S.players[0].face?`<img src="${S.players[0].face}">`:''}<span class="pn">${esc(pName(0))}</span></div>
+  <div class="scorebig">${S.score[0]} : ${S.score[1]}</div>
+  <div class="pchip${active===0?' me':''}">${S.players[1].face?`<img src="${S.players[1].face}">`:''}<span class="pn">${esc(pName(1))}</span></div>
+ </div>`;
+}
+/* ---------- screens ---------- */
+function renderSelect(pi){
+ S.screen='select'+pi;
+ const taken=S.players[1-pi].char;
+ app.innerHTML=`
+  <h1>${pi===0?'בחר את הדמות שלך':'שחקן 2 - בחר דמות'}</h1>
+  <div class="sub">${pi===0?'הפנים שלך נכנסות ישר לתוך הדמות':'גם לך מגיעה דמות מצחיקה'}</div>
+  <div class="steps"><b>1</b> בחר דמות · <b>2</b> צלם סלפי · <b>3</b> נצח והתרברג</div>
+  <input class="namefield" id="nm" maxlength="12" placeholder="השם שלך (לא חובה)" value="${esc(S.players[pi].name)}">
+  <div class="grid">${CHARS.map(c=>`
+   <div class="card${S.sel===c.id?' sel':''}${taken===c.id?' taken':''}" data-id="${c.id}">
+    <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="#3a2503" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <img src="${c.id}.webp" alt="${c.name}"><div class="nm">${c.name}</div>
+   </div>`).join('')}
+  </div>
+  <button class="cta sticky" id="go" ${S.sel?'':'disabled'}>צלם סלפי ויאללה</button>`;
+ app.querySelectorAll('.card').forEach(el=>el.onclick=()=>{
+  S.sel=el.dataset.id;
+  app.querySelectorAll('.card').forEach(x=>x.classList.toggle('sel',x.dataset.id===S.sel));
+  document.getElementById('go').disabled=false;
+ });
+ document.getElementById('nm').oninput=e=>{S.players[pi].name=e.target.value.trim()};
+ document.getElementById('go').onclick=()=>{S.players[pi].char=S.sel;S.sel=null;renderCam(pi)};
+}
+let stream=null;
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+async function renderCam(pi){
+ S.screen='cam'+pi;
+ const c=charOf(S.players[pi]);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">צלם סלפי</h1></div>
+  <div class="sub">הפנים שלך יתלבשו על <b style="color:#f6c445">${c.name}</b> - תחייך!</div>
+  <div class="camwrap"><video id="pv" playsinline autoplay muted></video></div>
+  <div class="shoot"><button class="shutter" id="sh" aria-label="צלם"></button></div>
+  <button class="linkbtn" id="up">או העלה תמונה מהגלריה</button>
+  <div class="camhint" id="err"></div>`;
+ const v=document.getElementById('pv');
+ try{
+  stopCam();
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:1280}},audio:false});
+  v.srcObject=stream;
+ }catch(e){
+  document.getElementById('err').textContent='המצלמה לא זמינה כאן - אפשר להעלות תמונה מהגלריה';
+  document.getElementById('sh').style.display='none';
+ }
+ document.getElementById('sh').onclick=()=>{
+  const cv=document.getElementById('cap');
+  const vw=v.videoWidth||640,vh=v.videoHeight||480;
+  const side=Math.min(vw,vh);
+  cv.width=side;cv.height=side;
+  const ctx=cv.getContext('2d');
+  ctx.translate(side,0);ctx.scale(-1,1);
+  ctx.drawImage(v,(vw-side)/2,(vh-side)/2,side,side,0,0,side,side);
+  const url=cv.toDataURL('image/jpeg',.85);
+  stopCam();S.players[pi].face=url;S.players[pi].adj={x:0,y:0,s:1.15};renderAdjust(pi);
+ };
+ document.getElementById('up').onclick=()=>{
+  const f=document.getElementById('filepick');
+  f.onchange=()=>{
+   if(!f.files[0])return;
+   const r=new FileReader();
+   r.onload=()=>{shrink(r.result,url=>{stopCam();S.players[pi].face=url;S.players[pi].adj={x:0,y:0,s:1.15};renderAdjust(pi)})};
+   r.readAsDataURL(f.files[0]);f.value='';
+  };
+  f.click();
+ };
+}
+function shrink(url,cb){
+ const im=new Image();
+ im.onload=()=>{
+  const side=Math.min(im.width,im.height,640);
+  const cv=document.getElementById('cap');cv.width=side;cv.height=side;
+  cv.getContext('2d').drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,side,side);
+  cb(cv.toDataURL('image/jpeg',.85));
+ };
+ im.src=url;
+}
+function renderAdjust(pi){
+ S.screen='adj'+pi;
+ const p=S.players[pi],c=charOf(p);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">מכניסים את הפנים</h1></div>
+  <div class="sub">גרור את הפנים למקום המושלם על <b style="color:#f6c445">${c.name}</b></div>
+  <div class="adjwrap" id="aw">${charBox(p)}</div>
+  <div class="zoomrow"><span>זום</span><input type="range" id="zm" min="1" max="2.8" step="0.01" value="${p.adj.s}"></div>
+  <button class="cta" id="ok">יאללה, מושלם</button>
+  <button class="linkbtn" id="re">צלם מחדש</button>`;
+ const fImg=app.querySelector('.face img');
+ const apply=()=>{fImg.style.transform=`translate(${p.adj.x}%,${p.adj.y}%) scale(${p.adj.s})`};
+ const faceEl=app.querySelector('.face');
+ let drag=null;
+ faceEl.style.touchAction='none';
+ faceEl.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ax:p.adj.x,ay:p.adj.y};faceEl.setPointerCapture(e.pointerId)};
+ faceEl.onpointermove=e=>{
+  if(!drag)return;
+  const r=faceEl.getBoundingClientRect();
+  p.adj.x=drag.ax+(e.clientX-drag.x)/r.width*100;
+  p.adj.y=drag.ay+(e.clientY-drag.y)/r.height*100;
+  apply();
+ };
+ faceEl.onpointerup=()=>drag=null;
+ document.getElementById('zm').oninput=e=>{p.adj.s=+e.target.value;apply()};
+ document.getElementById('ok').onclick=()=>{save();pi===0?renderVeil(1):renderMenu()};
+ document.getElementById('re').onclick=()=>renderCam(pi);
+}
+function renderVeil(next){
+ S.screen='veil';
+ const who=next===1?1:next==='rps1'?1:-1;
+ const btn=who>=0?`אני ${esc(pName(who))}, קדימה`:'מסתכלים ביחד!';
+ const txt=who>=0?`תעבירו את הטלפון<br>ל${esc(pName(who))}`:'עכשיו אפשר להסתכל ביחד';
+ app.innerHTML=`
+  <div class="veil">
+   <svg width="72" height="72" viewBox="0 0 72 72" fill="none" stroke="#f6c445" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="24" y="8" width="24" height="44" rx="5"/>
+    <line x1="31" y1="14" x2="41" y2="14"/>
+    <line x1="33" y1="46" x2="39" y2="46"/>
+    <path d="M12 62c8-6 16-6 24 0s16 6 24 0" opacity=".7"/>
+   </svg>
+   <div class="big" style="margin-top:18px">${txt}</div>
+  </div>
+  <button class="cta" id="go" style="margin-top:60px">${btn}</button>`;
+ document.getElementById('go').onclick=()=>{
+  if(next===1)renderSelect(1);
+  else if(next==='rps1')renderRpsPick(1);
+  else if(next==='reveal')renderRpsReveal();
+ };
+}
+function renderMenu(){
+ S.screen='menu';
+ app.innerHTML=`
+  <h1>מה משחקים?</h1>
+  <div class="sub">סדרה עד ${WIN_SCORE} ניצחונות - המנצח רוקד על השני</div>
+  ${scoreBar(-1)}
+  <div class="grid" style="margin-top:22px">
+   <div class="card" id="ttt" style="padding:22px 10px">
+    <div style="font-size:34px;font-weight:900;letter-spacing:4px"><span style="color:#f6c445">X</span><span style="color:#7ec8ff">O</span></div>
+    <div class="nm" style="margin-top:10px">איקס עיגול</div>
+   </div>
+   <div class="card" id="rps" style="padding:22px 10px">
+    <div style="display:flex;gap:6px">${rpsIcon('rock',30)}${rpsIcon('paper',30)}${rpsIcon('scissors',30)}</div>
+    <div class="nm" style="margin-top:10px">אבן נייר ומספריים</div>
+   </div>
+  </div>
+  <button class="linkbtn" id="restart">התחל מחדש (דמויות וסלפי)</button>`;
+ document.getElementById('ttt').onclick=()=>{S.game='ttt';S.score=[0,0];S.round=1;startTttRound()};
+ document.getElementById('rps').onclick=()=>{S.game='rps';S.score=[0,0];S.round=1;startRpsRound()};
+ document.getElementById('restart').onclick=()=>{localStorage.removeItem('facebattle');location.reload()};
+}
+/* ---------- tic tac toe ---------- */
+function startTttRound(){
+ S.board=Array(9).fill(null);S.turn=S.round%2===1?0:1;renderTtt();
+}
+function renderTtt(){
+ S.screen='ttt';
+ const P=S.players[S.turn];
+ app.innerHTML=`
+  <div class="hdr"><button class="backbtn" id="menu">תפריט</button><h1 style="font-size:22px">איקס עיגול</h1></div>
+  <div class="sub">סיבוב ${S.round} · הראשון ל-${WIN_SCORE} מנצח את הסדרה</div>
+  ${scoreBar(S.turn)}
+  <div class="board">${S.board.map((v,i)=>`<button class="cell${v?' '+(v==='X'?'x':'o'):''}" data-i="${i}">${v||''}</button>`).join('')}</div>
+  <div class="turnnote">תור של <b>${esc(pName(S.turn))}</b> (${S.turn===0?'X':'O'})</div>`;
+ document.getElementById('menu').onclick=()=>{save();renderMenu()};
+ app.querySelectorAll('.cell').forEach(el=>el.onclick=()=>{
+  const i=+el.dataset.i;
+  if(S.board[i])return;
+  S.board[i]=S.turn===0?'X':'O';
+  const w=winner(S.board);
+  if(w){endRound(w==='D'?-1:(w==='X'?0:1),'ttt')}
+  else{S.turn=1-S.turn;renderTtt()}
+ });
+}
+function winner(b){
+ const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+ for(const l of L){if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[1]]===b[l[2]])return b[l[0]]}
+ return b.every(x=>x)?'D':null;
+}
+/* ---------- rock paper scissors ---------- */
+function rpsIcon(k,size){
+ const s=size||44,c='#f6c445';
+ if(k==='rock')return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"><path d="M12 26v-6a4 4 0 018 0v-4a4 4 0 018 0v4a4 4 0 018 0v6a12 12 0 01-12 12h-2a12 12 0 01-10-6z"/><path d="M12 26l-4-4a3.5 3.5 0 015-5"/></svg>`;
+ if(k==='paper')return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"><path d="M16 24V10a3 3 0 016 0v12m0-14a3 3 0 016 0v14m0-12a3 3 0 016 0v14a14 14 0 01-14 14h-3a14 14 0 01-11-6l-4-6a3.2 3.2 0 015-4l3 4"/></svg>`;
+ return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"><path d="M14 8l12 16M34 8L22 24"/><circle cx="12" cy="34" r="6"/><circle cx="36" cy="34" r="6"/><path d="M22 24l-7 6M22 24l11 6"/></svg>`;
+}
+const RPS_HE={rock:'אבן',paper:'נייר',scissors:'מספריים'};
+function startRpsRound(){S.rps=[null,null];renderRpsPick(0)}
+function renderRpsPick(pi){
+ S.screen='rpspick';
+ app.innerHTML=`
+  <div class="hdr"><button class="backbtn" id="menu">תפריט</button><h1 style="font-size:22px">אבן נייר ומספריים</h1></div>
+  <div class="sub">סיבוב ${S.round} · הראשון ל-${WIN_SCORE} מנצח את הסדרה</div>
+  ${scoreBar(-1)}
+  <div class="turnnote" style="font-size:17px;margin-top:26px"><b>${esc(pName(pi))}</b> - בחר בסתר!</div>
+  <div class="rpsrow">
+   ${['rock','paper','scissors'].map(k=>`<button class="rpsbtn" data-k="${k}">${rpsIcon(k)}${RPS_HE[k]}</button>`).join('')}
+  </div>`;
+ document.getElementById('menu').onclick=()=>{save();renderMenu()};
+ app.querySelectorAll('.rpsbtn').forEach(el=>el.onclick=()=>{
+  S.rps[pi]=el.dataset.k;
+  pi===0?renderVeil('rps1'):renderVeil('reveal');
+ });
+}
+function renderRpsReveal(){
+ S.screen='rpsrev';
+ const[a,b]=S.rps;
+ const beats={rock:'scissors',paper:'rock',scissors:'paper'};
+ const res=a===b?-1:(beats[a]===b?0:1);
+ app.innerHTML=`
+  <h1 style="font-size:24px">והתוצאה...</h1>
+  ${scoreBar(-1)}
+  <div class="rpsreveal">
+   <div class="rpspick"><div style="font-weight:800;font-size:16px">${esc(pName(0))}</div><div style="margin:14px 0 4px">${rpsIcon(a,64)}</div><div class="rk">${RPS_HE[a]}</div></div>
+   <div style="font-size:30px;font-weight:900;color:#f6c445">VS</div>
+   <div class="rpspick"><div style="font-weight:800;font-size:16px">${esc(pName(1))}</div><div style="margin:14px 0 4px">${rpsIcon(b,64)}</div><div class="rk">${RPS_HE[b]}</div></div>
+  </div>
+  <button class="cta" id="go" style="margin-top:44px">${res===-1?'תיקו!':'לתוצאה'}</button>`;
+ document.getElementById('go').onclick=()=>endRound(res,'rps');
+}
+/* ---------- rounds & final ---------- */
+function endRound(w,game){
+ if(w>=0)S.score[w]++;
+ save();
+ if(S.score[w]>=WIN_SCORE){S.seriesWinner=w;renderWin();return}
+ const ov=document.createElement('div');
+ ov.className='roundov';
+ ov.innerHTML= w<0
+  ?`<div class="rt">תיקו!</div><div class="rs">אף אחד לא לוקח את הסיבוב</div>`
+  :`${charBox(S.players[w],'dance')}<div class="rt">${esc(pName(w))} לוקח את הסיבוב!</div><div class="rs">${S.score[0]} : ${S.score[1]}</div>`;
+ const btn=document.createElement('button');btn.className='cta';btn.style.marginTop='26px';btn.textContent='סיבוב הבא';
+ ov.appendChild(btn);document.body.appendChild(ov);
+ btn.onclick=()=>{
+  ov.remove();S.round++;save();
+  game==='ttt'?startTttRound():startRpsRound();
+ };
+}
+function renderWin(){
+ S.screen='win';
+ const w=S.seriesWinner,l=1-w;
+ const wt=WIN_TAUNTS[Math.floor(Math.random()*WIN_TAUNTS.length)];
+ const lt=LOSE_TAUNTS[Math.floor(Math.random()*LOSE_TAUNTS.length)];
+ const colors=['#f6c445','#7ec8ff','#ff6b9d','#7dffb2','#c39bff'];
+ let conf='';
+ for(let i=0;i<40;i++){
+  conf+=`<div class="confetto" style="left:${Math.random()*100}%;background:${colors[i%5]};animation-duration:${2.2+Math.random()*2.5}s;animation-delay:${Math.random()*2}s;transform:rotate(${Math.random()*360}deg)"></div>`;
+ }
+ app.innerHTML=`
+  ${scoreBar(-1)}
+  <div class="winstage">
+   ${conf}
+   <div class="bubble" style="top:2%;right:6%">${wt}</div>
+   <div class="bubble" style="top:38%;left:2%">${lt}</div>
+   <div class="winnerbox">${charBox(S.players[w],'dance')}</div>
+   <div class="loserbox">${charBox(S.players[l],'sad')}</div>
+  </div>
+  <div class="winline">
+   <div class="t1">${esc(pName(w))} ניצח ${S.score[w]}-${S.score[l]} בסדרה!</div>
+   <div class="t2">הדמות שלו רוקדת על הקבר של ${esc(pName(l))}</div>
+  </div>
+  <button class="cta" id="re" style="margin-top:18px">רימאטצ'י - שהוא יתנצח</button>
+  <button class="linkbtn" id="chg">תחלפו דמויות</button>`;
+ document.getElementById('re').onclick=()=>{S.score=[0,0];S.round=1;S.seriesWinner=null;save();S.game==='rps'?startRpsRound():startTttRound()};
+ document.getElementById('chg').onclick=()=>{S.score=[0,0];S.round=1;S.seriesWinner=null;S.sel=null;S.players.forEach(p=>{p.char=null;p.face=null;p.comp=null;p.shot=null;p.det=null});save();renderSelect(0)};
+}
+
+/* ---------- auto face pipeline (v2) ---------- */
+const _imgCache={};
+function loadImg(src){
+ if(_imgCache[src])return _imgCache[src];
+ _imgCache[src]=new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+ return _imgCache[src];
+}
+function loadScript(src){
+ return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)});
+}
+let _apiReady=null,_model=null;
+function loadFaceApi(){
+ if(_apiReady)return _apiReady;
+ _apiReady=(async()=>{
+  await loadScript('face-api.min.js');
+  try{await faceapi.tf.setBackend('cpu');await faceapi.tf.ready()}catch(e){}
+  try{await faceapi.nets.tinyFaceDetector.loadFromUri('./');_model='tiny'}
+  catch(e){await faceapi.nets.ssdMobilenetv1.loadFromUri('./');_model='ssd'}
+  try{await faceapi.nets.faceLandmark68Net.loadFromUri('./')}catch(e){}
+ })();
+ return _apiReady;
+}
+async function detectFaceE(img){
+ const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+ try{
+  await loadFaceApi();
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.5}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.35});
+  const ds=await faceapi.detectAllFaces(img,opts);
+  const ok=ds.map(d=>d.box).filter(b=>b.width>iw*0.06&&b.height>ih*0.06&&b.width<iw*0.62&&b.height<ih*0.62&&b.x>-b.width*0.3&&b.y>-b.height*0.3&&b.x+b.width<iw*1.3&&b.y+b.height<ih*1.3&&b.height/b.width>0.85&&b.height/b.width<1.9);
+  if(ok.length){
+   ok.sort((a,b)=>b.width*b.height-a.width*a.height);
+   const b=ok[0];
+   const ex=Math.min(Math.max(b.x+b.width/2,iw*0.05),iw*0.95);
+   const ey=Math.min(Math.max(b.y+b.height*0.5,ih*0.05),ih*0.95);
+   const erx=Math.min(b.width*0.55,iw*0.4);
+   const ery=Math.min(b.height*0.62,ih*0.45);
+   return {ex,ey,erx,ery};
+  }
+ }catch(e){}
+ // no reliable detection - skin centroid weighted toward typical selfie framing
+ try{
+  const w2=Math.min(380,iw),h2=Math.max(2,Math.round(ih*w2/iw));
+  const cv=document.createElement('canvas');cv.width=w2;cv.height=h2;
+  const cx2=cv.getContext('2d');cx2.drawImage(img,0,0,w2,h2);
+  const dd=cx2.getImageData(0,0,w2,h2).data;
+  const pcx=w2*0.5,pcy=h2*0.35,sx2=2*Math.pow(w2*0.26,2),sy2=2*Math.pow(h2*0.22,2);
+  let swx=0,swy=0,sw=0,sxx=0,syy=0;
+  for(let y=0;y<h2;y++)for(let x=0;x<w2;x++){
+   const i=(y*w2+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
+   if(r>80&&r-b>20&&r-g>5&&g-b>5&&r<252){
+    const dx=x-pcx,dy=y-pcy;
+    const w=Math.exp(-(dx*dx/sx2+dy*dy/sy2));
+    swx+=w*x;swy+=w*y;sw+=w;sxx+=w*x*x;syy+=w*y*y;
+   }
+  }
+  if(sw>w2*h2*0.005){
+   const k=iw/w2;
+   const cx=swx/sw,cy=swy/sw;
+   const vx=Math.max(0,sxx/sw-cx*cx),vy=Math.max(0,syy/sw-cy*cy);
+   let erx=Math.min(Math.max(Math.sqrt(vx)*1.6*k,iw*0.13),iw*0.26);
+   let ery=Math.min(Math.max(Math.sqrt(vy)*1.6*k,ih*0.13),ih*0.24);
+   if(erx>ery*0.95)erx=ery*0.95;
+   if(erx<ery*0.7)erx=ery*0.7;
+   return {ex:cx*k,ey:cy*k,erx,ery};
+  }
+ }catch(e){}
+ return {ex:iw*0.5,ey:ih*0.42,erx:iw*0.22,ery:ih*0.20};
+}
+function ringMean(data,w,h,cx,cy,rx,ry,r0,r1,skipTransparent){
+ let rs=0,gs=0,bs=0,n=0;
+ const x0=Math.max(0,Math.floor(cx-rx*r1)),x1=Math.min(w-1,Math.ceil(cx+rx*r1));
+ const y0=Math.max(0,Math.floor(cy-ry*r1)),y1=Math.min(h-1,Math.ceil(cy+ry*r1));
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+  const dx=(x-cx)/rx,dy=(y-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<r0||d>r1)continue;
+  if(skipTransparent&&dy<0.1)continue;
+  const i=(y*w+x)*4,a=data[i+3];
+  if(skipTransparent&&a<200)continue;
+  rs+=data[i];gs+=data[i+1];bs+=data[i+2];n++;
+ }
+ return n?{r:rs/n,g:gs/n,b:bs/n}:null;
+}
+async function composite(pi){
+ const p=S.players[pi],c=charOf(p);
+ const spr=await loadImg(c.id+'.webp');
+ const cv=document.createElement('canvas');cv.width=c.w;cv.height=c.h;
+ const ctx=cv.getContext('2d');
+ ctx.drawImage(spr,0,0);
+ const shot=await loadImg(p.shot);
+ const d=p.det||{ex:shot.width/2,ey:shot.height*0.42,erx:shot.width*0.30,ery:shot.width*0.38};
+ const fw=c.fw,fh=c.fh;
+ const s0=Math.max(fw/(2*d.erx),fh/(2*d.ery))*1.14*(p.adj?s(p.adj):1);
+ function s(a){return a&&a.s?a.s:1}
+ const SS=2;const fc=document.createElement('canvas');fc.width=Math.round(fw*SS);fc.height=Math.round(fh*SS);
+ const fctx=fc.getContext('2d');
+ const offX=(p.adj?p.adj.x:0)/100*fw,offY=(p.adj?p.adj.y:0)/100*fh;
+ fctx.filter='blur(0.7px)';
+ fctx.drawImage(shot,(fw/2-d.ex*s0+offX)*SS,(fh/2-d.ey*s0+offY)*SS,shot.width*s0*SS,shot.height*s0*SS);
+ fctx.filter='none';
+ // tone match: character neck ring vs face edge ring
+ const neckTone=ringMean(ctx.getImageData(0,0,c.w,c.h).data,c.w,c.h,c.fx,c.fy,fw/2,fh/2,1.03,1.4,true);
+ const fImg=fctx.getImageData(0,0,fc.width,fc.height);
+ let faceTone=null;
+ {let rs=0,gs=0,bs=0,n=0;const dd=fImg.data,cx=fc.width/2,cy=fc.height*0.6,rr=fc.width*0.22;
+  for(let y=Math.floor(cy-rr);y<cy+rr;y++)for(let x=Math.floor(cx-rr);x<cx+rr;x++){
+   if(x<0||y<0||x>=fc.width||y>=fc.height)continue;
+   const dx=(x-cx)/rr,dy=(y-cy)/rr;if(dx*dx+dy*dy>1)continue;
+   const i=(y*fc.width+x)*4,r=dd[i],g=dd[i+1],b=dd[i+2];
+   if(r<70||r<g*0.85||g<b*0.8)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>80)faceTone={r:rs/n,g:gs/n,b:bs/n}}
+ if(neckTone&&faceTone){
+  const gr=Math.min(1.45,Math.max(0.7,neckTone.r/faceTone.r));
+  const gg=Math.min(1.45,Math.max(0.7,neckTone.g/faceTone.g));
+  const gb=Math.min(1.45,Math.max(0.7,neckTone.b/faceTone.b));
+  const dd=fImg.data,cx=fc.width/2,cy=fc.height/2;
+  for(let y=0;y<fc.height;y++)for(let x=0;x<fc.width;x++){
+   const dx=(x-cx)/(fc.width/2),dy=(y-cy)/(fc.height/2);
+   const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+   const w=0.78+0.22*rad;
+   const i=(y*fc.width+x)*4;
+   dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
+  fctx.putImageData(fImg,0,0);
+ }
+ // elliptical feather mask
+ const mk=document.createElement('canvas');mk.width=fc.width;mk.height=fc.height;
+ const mctx=mk.getContext('2d');
+ mctx.translate(fc.width/2,fc.height/2);mctx.scale(1,fc.height/fc.width);
+ const g=mctx.createRadialGradient(0,0,0,0,0,fc.width/2);
+ g.addColorStop(0.8,'rgba(0,0,0,1)');g.addColorStop(0.94,'rgba(0,0,0,0)');
+ mctx.fillStyle=g;mctx.fillRect(-fc.width/2,-fc.width/2,fc.width,fc.width);
+ fctx.globalCompositeOperation='destination-in';
+ fctx.drawImage(mk,0,0,fc.width,fc.height);
+ fctx.globalCompositeOperation='source-over';
+ ctx.drawImage(fc,c.fx-fw/2,c.fy-fh/2,fw,fh);
+ // chip face crop (square around face)
+ const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+ chip.getContext('2d').drawImage(fc,fc.width*0.2,fc.height*0.15,fc.width*0.6,fc.height*0.6,0,0,96,96);
+ p.face=chip.toDataURL('image/jpeg',0.85);
+ p.comp=cv.toDataURL('image/webp',0.92);
+}
+async function aiFaceBake(c0,shotUrl){
+ const desc=AI_PROMPTS[c0.id]||'a funny cartoon character';
+ const prompt=`First image: a 3D cartoon character (${desc}) whose face area is a blank featureless patch. Second image: a real person's selfie photo. Put THIS person's face onto the character, replacing the blank face area. CRITICAL STYLE RULE: the face must be a real human photograph - NOT a cartoon, NOT 3D-rendered, NOT illustrated, NOT smoothed or beautified. Keep the exact photographic face from the second image: real skin texture, real facial hair, real pores and wrinkles, natural photo colors and lighting, same eyes, nose, mouth, expression. The final image must look like a real person's head inside a high quality 3D cartoon mascot costume - cartoon costume, REAL face. Blend perfectly: costume fur, hood, hair and headwear wrap naturally around the real face with a soft inner shadow, and absolutely no visible seam, border, ring, glow or frame around the face. Keep the character's body, costume, pose, headwear and background exactly as in the first image. ${AI_STYLE}`;
+ try{
+  const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c0.id+'.webp'});
+  if(!sprUrl)return null;
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),100000);
+  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:sprUrl,image2:shotUrl,prompt}),signal:ctl.signal});
+  clearTimeout(to);
+  const j=await r.json();
+  if(j&&j.ok&&j.image)return j.image;
+ }catch(e){}
+ return null;
+}
+async function faceOk(url,c0){
+ try{
+  const im=await loadImg(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
+  const sx=W/c0.w,sy=H/c0.h;
+  const cv=document.createElement('canvas');cv.width=24;cv.height=24;
+  const cx=cv.getContext('2d');
+  cx.drawImage(im,(c0.fx-c0.fw/2)*sx,(c0.fy-c0.fh/2)*sy,c0.fw*sx,c0.fh*sy,0,0,24,24);
+  const d=cx.getImageData(0,0,24,24).data;
+  let skin=0,rs=0,gs=0,bs=0,n=24*24,mn=255,mx=0;
+  for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];
+   rs+=r;gs+=g;bs+=b;
+   const l=0.299*r+0.587*g+0.114*b;if(l<mn)mn=l;if(l>mx)mx=l;
+   if(r>95&&g>40&&b>20&&r>b&&r-g<80)skin++;}
+  if(gs>rs*1.05&&gs>bs*1.05)return false;
+  if(skin<n*0.25)return false;
+  if(mx-mn<25)return false;
+  return true;
+ }catch(e){return false}
+}
+async function aiEdit(pi,url){
+ const c=charOf(S.players[pi]);if(!c)return null;
+ const desc=AI_PROMPTS[c.id]||'a funny cartoon character';
+ const prompt=`Redraw this exact character: keep the same character, costume, pose, head shape, hat and headwear exactly as in the input image. ${desc}. The character's face area is a blank featureless flesh-toned patch. CRITICAL: cover the entire blank face area completely with a smooth opaque flat bright green mask (#00FF00), edge to edge from hairline to chin and ear to ear - pure chroma-key green paint over the face, no facial features, no shading, and no other green anywhere in the image. Keep everything else about the character's head and headwear intact. Replace the background with a smooth solid dark purple studio backdrop. ${AI_STYLE}`;
+ try{
+  const sprUrl=await new Promise(res=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);res(cv.toDataURL('image/png'))};im.onerror=()=>res(null);im.src=c.id+'.webp'});
+  if(!sprUrl)return null;
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),100000);
+  const r=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:sprUrl,prompt}),signal:ctl.signal});
+  clearTimeout(to);
+  const j=await r.json();
+  if(j&&j.ok&&j.image)return j.image;
+ }catch(e){}
+ return null;
+}
+function findGreenHead(d,W,H){
+ let minX=W,minY=H,maxX=0,maxY=0,n=0;
+ for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){
+  const i=(y*W+x)*4,r=d[i],g=d[i+1],b=d[i+2];
+  if(g>110&&g>r*1.12&&g>b*1.12){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;n++}
+ }
+ if(n<150)return null;
+ const bw=maxX-minX+1,bh=maxY-minY+1,ba=bw*bh;
+ if(ba<W*H*0.012)return null;
+ if(n*4<ba*0.5)return null;
+ if(bw<bh*0.45||bw>bh*1.35)return null;
+ if(bw>W*0.42||bh>H*0.36)return null;
+ return {ex:(minX+maxX)/2,ey:(minY+maxY)/2,erx:(maxX-minX)/2+1,ery:(maxY-minY)/2+1};
+}
+async function hybridRealFace(aiUrl,shotUrl,charId){
+ const ai=await loadImg(aiUrl),shot=await loadImg(shotUrl);
+ let W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
+ let cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ let ctx=cv.getContext('2d');ctx.drawImage(ai,0,0,W,H);
+ let gh=findGreenHead(ctx.getImageData(0,0,W,H).data,W,H);
+ let isAsset=false;
+ if(!gh&&charId){
+  const cc=CHARS.find(x=>x.id===charId);
+  if(cc){
+   const spr=await loadImg(charId+'.webp');
+   const SC=2;
+   W=(spr.naturalWidth||spr.width)*SC;H=(spr.naturalHeight||spr.height)*SC;
+   cv=document.createElement('canvas');cv.width=W;cv.height=H;
+   ctx=cv.getContext('2d');
+   ctx.fillStyle='#1c1240';ctx.fillRect(0,0,W,H);
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   ctx.drawImage(spr,0,0,W,H);
+   gh={ex:cc.fx*SC,ey:cc.fy*SC,erx:cc.fw/2*SC,ery:cc.fh/2*SC};
+   isAsset=true;
+  }
+ }
+ if(!gh)return null;
+ const df=await detectFaceE(shot);
+ if(!df)return null;
+ // costume ring color around the opening (before despill, skipping green)
+ let rC=null;
+ if(isAsset){
+  const adA=ctx.getImageData(0,0,W,H).data;
+  const rm=ringMean(adA,W,H,gh.ex,gh.ey,gh.erx,gh.ery,1.02,1.35,false);
+  if(rm)rC=rm;
+ }
+ {const ad0=ctx.getImageData(0,0,W,H).data;
+  const bins={};
+  const bx0=Math.max(0,(gh.ex-gh.erx*2.4)|0),by0=Math.max(0,(gh.ey-gh.ery*2.4)|0);
+  const bx1=Math.min(W-1,(gh.ex+gh.erx*2.4)|0),by1=Math.min(H-1,(gh.ey+gh.ery*2.4)|0);
+  for(let y=by0;y<=by1;y+=2)for(let x=bx0;x<=bx1;x+=2){
+   const i=(y*W+x)*4,r=ad0[i],g=ad0[i+1],b=ad0[i+2];
+   if(g>100&&g>r*1.12&&g>b*1.12)continue;
+   if(r+g+b<240)continue;
+   if(r>g*1.4)continue;
+   if(b>r*1.1)continue;
+   const k=(r>>4)+','+(g>>4)+','+(b>>4);
+   (bins[k]=bins[k]||[]).push(r,g,b)}
+  let best=null,bn=0;
+  for(const k in bins){const a=bins[k],c=a.length/3;if(c>bn){bn=c;best=a}}
+  if(!rC&&best&&bn>40){let rs=0,gs=0,bs=0;for(let j=0;j<best.length;j+=3){rs+=best[j];gs+=best[j+1];bs+=best[j+2]}rC={r:rs/bn,g:gs/bn,b:bs/bn}}}
+ // despill green residue around the head: strong green becomes costume color, mild tint is clamped
+ {const rx0=Math.max(0,(gh.ex-gh.erx*2.2)|0),ry0=Math.max(0,(gh.ey-gh.ery*2.2)|0);
+  const rw=Math.min(W-rx0,(gh.erx*4.4)|0),rh=Math.min(H-ry0,(gh.ery*4.4)|0);
+  const reg=ctx.getImageData(rx0,ry0,rw,rh);const d=reg.data;
+  for(let i=0;i<d.length;i+=4){
+   const m=Math.max(d[i],d[i+2]);
+   const mb=Math.max(d[i],d[i+2]);
+   if(d[i+1]>mb*1.02&&d[i+1]>100){
+    const gc=mb*1.02;
+    if(rC){
+     const t=Math.min(1,(d[i+1]-mb)/70);
+     const f=0.35+0.5*t;
+     d[i]=d[i]*(1-f)+rC.r*f;
+     d[i+2]=d[i+2]*(1-f)+rC.b*f;
+     d[i+1]=Math.min(gc,d[i+1]*(1-f)+rC.g*f);
+    }else d[i+1]=gc;
+   }
+  }
+  ctx.putImageData(reg,rx0,ry0)}
+ // neutralize colored/dark glow rim around the opening (AI renders only; red/orange costume details exempt)
+ if(!isAsset&&rC){
+  const lumC=0.299*rC.r+0.587*rC.g+0.114*rC.b;
+  const sx0=Math.max(0,(gh.ex-gh.erx*1.7)|0),sy0=Math.max(0,(gh.ey-gh.ery*1.7)|0);
+  const sw=Math.min(W-sx0,(gh.erx*3.4)|0),sh=Math.min(H-sy0,(gh.ery*3.4)|0);
+  const sreg=ctx.getImageData(sx0,sy0,sw,sh);const sd=sreg.data;
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+   const dx=(sx0+x-gh.ex)/gh.erx,dy=(sy0+y-gh.ey)/gh.ery;
+   const t=Math.sqrt(dx*dx+dy*dy);
+   if(t<0.85||t>1.6)continue;
+   const i=(y*sw+x)*4,r=sd[i],g=sd[i+1],b=sd[i+2];
+   if(r>g*1.6&&r>b*1.6)continue;
+   const lum=0.299*r+0.587*g+0.114*b;
+   const greenish=g>r*1.05&&g>b*1.05;
+   const darkOlive=g>=r*0.95&&lum<lumC*0.6;
+   const veryDark=lum<lumC*0.35;
+   if(!greenish&&!darkOlive&&!veryDark)continue;
+   const f=veryDark?0.6:0.85;
+   sd[i]=r*(1-f)+rC.r*f;sd[i+1]=g*(1-f)+rC.g*f;sd[i+2]=b*(1-f)+rC.b*f;
+  }
+  ctx.putImageData(sreg,sx0,sy0)}
+ // face crop + gentle contrast
+ const SS=2;
+ const fw=Math.max(2,Math.round(df.erx*2*SS)),fh=Math.max(2,Math.round(df.ery*2*SS));
+ const fc=document.createElement('canvas');fc.width=fw;fc.height=fh;
+ const fctx=fc.getContext('2d');
+ fctx.filter='blur(0.5px)';
+ fctx.drawImage(shot,df.ex-df.erx,df.ey-df.ery,df.erx*2,df.ery*2,0,0,fw,fh);
+ fctx.filter='none';
+ {const fImg=fctx.getImageData(0,0,fw,fh);const dd=fImg.data;
+  for(let i=0;i<dd.length;i+=4){
+   dd[i]=Math.min(255,Math.max(0,128+(dd[i]-128)*1.07));
+   dd[i+1]=Math.min(255,Math.max(0,128+(dd[i+1]-128)*1.07));
+   dd[i+2]=Math.min(255,Math.max(0,128+(dd[i+2]-128)*1.07))}
+  fctx.putImageData(fImg,0,0)}
+ // tone match the face to the costume ring color
+ {if(rC){
+   const fImg=fctx.getImageData(0,0,fw,fh);
+   const ft=ringMean(fImg.data,fw,fh,fw/2,fh/2,fw/2,fh/2,0.55,0.9,false);
+   if(ft){
+    const tLo=isAsset?0.92:0.75,tHi=isAsset?1.08:1.3;
+    const gr=Math.min(tHi,Math.max(tLo,rC.r/Math.max(1,ft.r)));
+    const gg=Math.min(tHi,Math.max(tLo,rC.g/Math.max(1,ft.g)));
+    const gb=Math.min(tHi,Math.max(tLo,rC.b/Math.max(1,ft.b)));
+    const dd=fImg.data,cx=fw/2,cy=fh/2;
+    for(let y=0;y<fh;y++)for(let x=0;x<fw;x++){
+     const dx=(x-cx)/(fw/2),dy=(y-cy)/(fh/2);
+     const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+     const w=(0.55+0.45*rad)*(isAsset?0.5:1);
+     const i=(y*fw+x)*4;
+     dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
+    fctx.putImageData(fImg,0,0)}}}
+ // fur wrap: stretch hood fur inward over the rim zone so no glow residue survives (costume AI renders only)
+ if(!isAsset){const srcAll=ctx.getImageData(0,0,W,H).data;
+  const R0=0.74,R1=1.30;
+  const bx0=Math.max(0,(gh.ex-gh.erx*(R1+0.06))|0),by0=Math.max(0,(gh.ey-gh.ery*(R1+0.06))|0);
+  const bx1=Math.min(W-1,Math.ceil(gh.ex+gh.erx*(R1+0.06))),by1=Math.min(H-1,Math.ceil(gh.ey+gh.ery*(R1+0.06)));
+  const wreg=ctx.createImageData(W,H);const d=wreg.data;
+  for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){
+   const dx=(x-gh.ex)/gh.erx,dy=(y-gh.ey)/gh.ery;
+   const t=Math.sqrt(dx*dx+dy*dy);
+   if(t<R0)continue;
+   const ux=dx/t,uy=dy/t;
+   const R1a=R1-0.11*Math.max(0,-uy)*Math.max(0,-uy);
+   if(t>R1a)continue;
+   const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
+   const ts=1.31+(j<0?-j:j)*0.12;
+   const fx=gh.ex+ux*gh.erx*ts,fy=gh.ey+uy*gh.ery*ts;
+   const sx0=Math.floor(fx),sy0=Math.floor(fy);
+   if(sx0<0||sy0<0||sx0>=W-1||sy0>=H-1)continue;
+   const ax=fx-sx0,ay=fy-sy0;
+   const sx1=sx0+1,sy1=sy0+1;
+   const i00=(sy0*W+sx0)*4,i10=(sy0*W+sx1)*4,i01=(sy1*W+sx0)*4,i11=(sy1*W+sx1)*4;
+   const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
+   const di=(y*W+x)*4;
+   const a=Math.min(1,(t-R0)/0.09)*Math.min(1,(R1a-t)/0.08);
+   d[di]=srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11;
+   d[di+1]=srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11;
+   d[di+2]=srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11;
+   d[di+3]=a*255;
+  }
+  const wc=document.createElement('canvas');wc.width=W;wc.height=H;
+  wc.getContext('2d').putImageData(wreg,0,0);
+  ctx.save();ctx.filter='blur(3px)';ctx.drawImage(wc,0,0);ctx.restore()}
+ // paste face recessed inside the opening; the hood fur wraps its boundary
+ const layer=document.createElement('canvas');layer.width=W;layer.height=H;
+ const lx=layer.getContext('2d');
+ const PSC=isAsset?0.80:0.86;
+ const pw=gh.erx*2*PSC,ph=gh.ery*2*PSC;
+ lx.drawImage(fc,gh.ex-pw/2,gh.ey-ph/2,pw,ph);
+ const mk=document.createElement('canvas');mk.width=W;mk.height=H;
+ const mctx=mk.getContext('2d');
+ mctx.translate(gh.ex,gh.ey);mctx.scale(gh.erx*PSC,gh.ery*PSC);
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1);
+ const e0=isAsset?0.5:0.6,e1=isAsset?1.0:0.96;
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(e0,'rgba(0,0,0,1)');mg.addColorStop(e1,'rgba(0,0,0,0)');mg.addColorStop(1,'rgba(0,0,0,0)');
+ mctx.fillStyle=mg;
+ mctx.fillRect(-1.2,-1.2,2.4,2.4);
+ mctx.setTransform(1,0,0,1,0,0);
+ mctx.filter='blur(4px)';mctx.drawImage(mk,0,0);mctx.filter='none';
+ lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
+ lx.globalCompositeOperation='source-over';
+ ctx.drawImage(layer,0,0);
+ // soft inner shadow inside the opening for depth (costume renders only)
+ if(!isAsset){
+ ctx.save();
+ ctx.translate(gh.ex,gh.ey);ctx.scale(gh.erx,gh.ery);
+ const sg=ctx.createRadialGradient(0,0,0,0,0,1);
+ sg.addColorStop(0.60,'rgba(25,12,4,0)');
+ sg.addColorStop(0.82,'rgba(25,12,4,0.32)');
+ sg.addColorStop(1,'rgba(25,12,4,0)');
+ ctx.fillStyle=sg;
+ ctx.fillRect(-1.1,-1.1,2.2,2.2);
+ ctx.restore();}
+ // rim-quality metric: ring zone around the opening must read as fur/skin, not glow residue
+ hybridRealFace.lastWasAsset=isAsset;
+ hybridRealFace.lastRimBad=0;
+ if(!isAsset&&rC){
+  const lumC2=0.299*rC.r+0.587*rC.g+0.114*rC.b;
+  const qd=ctx.getImageData(0,0,W,H).data;
+  let bad=0,tot=0;
+  for(let a=0;a<64;a++){
+   const th=a/64*Math.PI*2;
+   for(const tt of [1.0,1.15,1.3,1.45]){
+    const x=Math.round(gh.ex+Math.cos(th)*gh.erx*tt),y=Math.round(gh.ey+Math.sin(th)*gh.ery*tt);
+    if(x<0||y<0||x>=W||y>=H)continue;
+    const i=(y*W+x)*4,r=qd[i],g=qd[i+1],b=qd[i+2];
+    if(r>g*1.6&&r>b*1.6){tot++;continue}
+    const lum=0.299*r+0.587*g+0.114*b;
+    const greenish=g>r*1.05&&g>b*1.05;
+    const olive=g>=r*0.95&&lum<lumC2*0.6;
+    const dark=lum<lumC2*0.35;
+    tot++;if(greenish||olive||dark)bad++;
+   }
+  }
+  hybridRealFace.lastRimBad=bad/(tot||1);
+ }
+ return cv.toDataURL('image/jpeg',0.92);
+}
+function downscaleImg(url,maxW,q){
+ return new Promise(res=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,maxW/im.width);const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',q))};im.onerror=()=>res(url);im.src=url});
+}
+
+async function detectFaceLA(img){
+ const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+ try{
+  await loadFaceApi();
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.5}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.35});
+  let d=null;
+  try{d=await faceapi.detectSingleFace(img,opts).withFaceLandmarks()}catch(e2){}
+  if(!d){const ds=await faceapi.detectAllFaces(img,opts);if(ds&&ds.length){ds.sort((a,b)=>b.box.width*b.box.height-a.box.width*a.box.height);d={detection:ds[0],landmarks:null}}}
+  if(d&&d.detection){
+   const b=d.detection.box;
+   if(b.width>iw*0.05&&b.height>ih*0.05){
+    let angle=0;
+    if(d.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(d.landmarks.getLeftEye()),rc=mid(d.landmarks.getRightEye());
+     angle=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+    }
+    return {ex:b.x+b.width/2,ey:b.y+b.height*0.50,erx:b.width*0.58,ery:b.height*0.58,angle,detected:true};
+   }
+  }
+ }catch(e){}
+ const e2=await detectFaceE(img);
+ return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
+}
+// v5.2.0 identity restore: put the REAL face pixels onto the baked render.
+// The bake supplies costume/fur/lighting; the face is composited from the selfie
+// (rotated+scaled via landmark alignment, tone-matched to the scene) and the
+// bake's own fur ring is stretched over the rim so the face sits recessed in the hood.
+async function identityRestore(bakedUrl,shotUrl,c0){
+ const ai=await loadImg(bakedUrl),shot=await loadImg(shotUrl);
+ const W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
+ const s=await detectFaceLA(shot);
+ let t;
+ {const sx=W/c0.w,sy=H/c0.h;
+  t={ex:c0.fx*sx,ey:c0.fy*sy,erx:c0.fw/2*sx*0.92,ery:c0.fh/2*sy*0.92,angle:0,detected:true};
+  try{
+   await loadFaceApi();
+   const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.4}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.3});
+   const ds=await faceapi.detectAllFaces(ai,opts).withFaceLandmarks();
+   let best=null,bd=1e9;
+   for(const d of ds){
+    const b=d.detection.box;
+    const bx=b.x+b.width/2,by=b.y+b.height*0.5;
+    const dist=Math.hypot(bx-t.ex,by-t.ey);
+    const okSize=b.width>t.erx*0.9&&b.width<t.erx*3.4;
+    if(okSize&&dist<t.ery*0.6&&dist<bd){bd=dist;best=d}
+   }
+   if(best){
+    const b=best.detection.box;
+    t.ex=b.x+b.width/2;t.ey=b.y+b.height*0.5;
+    if(best.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(best.landmarks.getLeftEye()),rc=mid(best.landmarks.getRightEye());
+     const a=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+     if(Math.abs(a)<0.5)t.angle=a;
+    }
+   }
+  }catch(e){}
+ }
+ const PAD=2.7,pw=Math.ceil(t.erx*2*PAD),ph=Math.ceil(t.ery*2*PAD);
+ const pc=document.createElement('canvas');pc.width=pw;pc.height=ph;
+ const px=pc.getContext('2d');
+ px.translate(pw/2,ph/2);px.rotate(-t.angle);
+ px.drawImage(ai,-t.ex,-t.ey);
+ px.setTransform(1,0,0,1,0,0);
+ const cx=pw/2,cy=ph/2,erx=t.erx,ery=t.ery;
+ const pre=document.createElement('canvas');pre.width=pw;pre.height=ph;
+ pre.getContext('2d').drawImage(pc,0,0);
+ const pd0=px.getImageData(0,0,pw,ph).data;
+ let fT=null;
+ {let rs=0,gs=0,bs=0,n=0;
+  for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
+   const dx=(x-cx)/erx,dy=(y-cy)/ery;
+   if(dx*dx+dy*dy>0.45)continue;
+   const i=(y*pw+x)*4,r=pd0[i],g=pd0[i+1],b=pd0[i+2];
+   if(0.299*r+0.587*g+0.114*b<45)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>120)fT={r:rs/n,g:gs/n,b:bs/n}}
+ const scx=erx/s.erx,scy=ery/s.ery;
+ const K=1.50;
+ const sw=Math.max(4,Math.round(s.erx*2*K*scx)),sh=Math.max(4,Math.round(s.ery*2*K*scy));
+ const fc=document.createElement('canvas');fc.width=sw;fc.height=sh;
+ const fx=fc.getContext('2d');
+ fx.translate(sw/2,sh/2);fx.rotate(-s.angle);fx.scale(scx,scy);
+ fx.translate(-s.ex,-s.ey);
+ fx.drawImage(shot,0,0);
+ fx.setTransform(1,0,0,1,0,0);
+ if(fT){
+  const fImg=fx.getImageData(0,0,sw,sh);const dd=fImg.data;
+  const ft2=ringMean(dd,sw,sh,sw/2,sh/2,sw/2*0.62,sh/2*0.62,0.25,0.75,false);
+  if(ft2){
+   const gr=Math.min(1.3,Math.max(0.78,fT.r/Math.max(1,ft2.r)));
+   const gg=Math.min(1.3,Math.max(0.78,fT.g/Math.max(1,ft2.g)));
+   const gb=Math.min(1.3,Math.max(0.78,fT.b/Math.max(1,ft2.b)));
+   const ccx=sw/2,ccy=sh/2;
+   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const dx=(x-ccx)/(sw/2),dy=(y-ccy)/(sh/2);
+    const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+    const w=0.55+0.45*rad;
+    const i=(y*sw+x)*4;
+    dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));
+    dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));
+    dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
+   fx.putImageData(fImg,0,0)}}
+ const layer=document.createElement('canvas');layer.width=pw;layer.height=ph;
+ const lx=layer.getContext('2d');
+ lx.drawImage(fc,cx-sw/2,cy-sh/2);
+ const mk=document.createElement('canvas');mk.width=pw;mk.height=ph;
+ const mctx=mk.getContext('2d');
+ mctx.translate(cx,cy);mctx.scale(erx*0.86,ery*1.02);
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1);
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.72,'rgba(0,0,0,1)');
+ mg.addColorStop(1,'rgba(0,0,0,0)');
+ mctx.fillStyle=mg;mctx.fillRect(-1.15,-1.15,2.3,2.3);
+ mctx.setTransform(1,0,0,1,0,0);
+ mctx.filter='blur(4px)';mctx.drawImage(mk,0,0);mctx.filter='none';
+ lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
+ lx.globalCompositeOperation='source-over';
+ px.drawImage(layer,0,0);
+ if(false){const srcAll=pre.getContext('2d').getImageData(0,0,pw,ph).data;
+  const R0=0.78,R1=1.40;
+  const bx0=Math.max(0,Math.floor(cx-erx*(R1+0.08))),by0=Math.max(0,Math.floor(cy-ery*(R1+0.08)));
+  const bx1=Math.min(pw-1,Math.ceil(cx+erx*(R1+0.08))),by1=Math.min(ph-1,Math.ceil(cy+ery*(R1+0.08)));
+  const wreg=px.createImageData(pw,ph);const d=wreg.data;
+  for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){
+   const dx=(x-cx)/erx,dy=(y-cy)/ery;
+   const tt=Math.sqrt(dx*dx+dy*dy);
+   if(tt<R0)continue;
+   const ux=dx/tt,uy=dy/tt;
+   const R1a=R1-0.11*Math.max(0,-uy)*Math.max(0,-uy);
+   if(tt>R1a)continue;
+   const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
+   const ts=1.42+(j<0?-j:j)*0.10;
+   const fx2=cx+ux*erx*ts,fy2=cy+uy*ery*ts;
+   const sx0=Math.floor(fx2),sy0=Math.floor(fy2);
+   if(sx0<0||sy0<0||sx0>=pw-1||sy0>=ph-1)continue;
+   const ax=fx2-sx0,ay=fy2-sy0;
+   const i00=(sy0*pw+sx0)*4,i10=(sy0*pw+sx0+1)*4,i01=((sy0+1)*pw+sx0)*4,i11=((sy0+1)*pw+sx0+1)*4;
+   const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
+   const di=(y*pw+x)*4;
+   let a=Math.min(1,(tt-R0)/0.15)*Math.min(1,(R1a-tt)/0.08);
+   if(uy>0.25)a*=Math.max(0.15,1-(uy-0.25)*1.1);
+   d[di]=srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11;
+   d[di+1]=srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11;
+   d[di+2]=srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11;
+   d[di+3]=a*255;
+  }
+  const wc=document.createElement('canvas');wc.width=pw;wc.height=ph;
+  wc.getContext('2d').putImageData(wreg,0,0);
+  px.save();px.filter='blur(2.5px)';px.drawImage(wc,0,0);px.restore()}
+ px.save();
+ px.translate(cx,cy);px.scale(erx,ery);
+ const sg=px.createRadialGradient(0,0,0,0,0,1);
+ sg.addColorStop(0.60,'rgba(25,12,4,0)');
+ sg.addColorStop(0.82,'rgba(25,12,4,0.30)');
+ sg.addColorStop(1,'rgba(25,12,4,0)');
+ px.fillStyle=sg;px.fillRect(-1.1,-1.1,2.2,2.2);
+ px.restore();
+ try{window.__dbg={t:{ex:t.ex,ey:t.ey,erx:t.erx,ery:t.ery,angle:t.angle},s:{ex:s.ex,ey:s.ey,erx:s.erx,ery:s.ery,angle:s.angle},fT:fT,pre:pre.toDataURL('image/jpeg',0.9),post:pc.toDataURL('image/jpeg',0.9),srclayer:fc.toDataURL('image/jpeg',0.9)}}catch(e){}
+ const out=document.createElement('canvas');out.width=W;out.height=H;
+ const ox=out.getContext('2d');
+ ox.drawImage(ai,0,0,W,H);
+ ox.translate(t.ex,t.ey);ox.rotate(t.angle);
+ ox.drawImage(pc,-pw/2,-ph/2);
+ ox.setTransform(1,0,0,1,0,0);
+ return out.toDataURL('image/jpeg',0.92);
+}
+function downscaleImg(url,maxW,q){
+ return new Promise(res=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,maxW/im.width);const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',q))};im.onerror=()=>res(url);im.src=url});
+}
+
+async function detectFaceLA(img){
+ const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+ try{
+  await loadFaceApi();
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.5}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.35});
+  let d=null;
+  try{d=await faceapi.detectSingleFace(img,opts).withFaceLandmarks()}catch(e2){}
+  if(!d){const ds=await faceapi.detectAllFaces(img,opts);if(ds&&ds.length){ds.sort((a,b)=>b.box.width*b.box.height-a.box.width*a.box.height);d={detection:ds[0],landmarks:null}}}
+  if(d&&d.detection){
+   const b=d.detection.box;
+   if(b.width>iw*0.05&&b.height>ih*0.05){
+    let angle=0;
+    if(d.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(d.landmarks.getLeftEye()),rc=mid(d.landmarks.getRightEye());
+     angle=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+    }
+    return {ex:b.x+b.width/2,ey:b.y+b.height*0.50,erx:b.width*0.58,ery:b.height*0.58,angle,detected:true};
+   }
+  }
+ }catch(e){}
+ const e2=await detectFaceE(img);
+ return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
+}
+// v5.2.0 identity restore: put the REAL face pixels onto the baked render.
+// The bake supplies costume/fur/lighting; the face is composited from the selfie
+// (rotated+scaled via landmark alignment, tone-matched to the scene) and the
+// bake's own fur ring is stretched over the rim so the face sits recessed in the hood.
+async function identityRestore(bakedUrl,shotUrl,c0){
+ const ai=await loadImg(bakedUrl),shot=await loadImg(shotUrl);
+ const W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
+ const s=await detectFaceLA(shot);
+ let t;
+ {const sx=W/c0.w,sy=H/c0.h;
+  t={ex:c0.fx*sx,ey:c0.fy*sy,erx:c0.fw/2*sx*0.92,ery:c0.fh/2*sy*0.92,angle:0,detected:true};
+  try{
+   await loadFaceApi();
+   const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.4}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.3});
+   const ds=await faceapi.detectAllFaces(ai,opts).withFaceLandmarks();
+   let best=null,bd=1e9;
+   for(const d of ds){
+    const b=d.detection.box;
+    const bx=b.x+b.width/2,by=b.y+b.height*0.5;
+    const dist=Math.hypot(bx-t.ex,by-t.ey);
+    const okSize=b.width>t.erx*0.9&&b.width<t.erx*3.4;
+    if(okSize&&dist<t.ery*0.6&&dist<bd){bd=dist;best=d}
+   }
+   if(best){
+    const b=best.detection.box;
+    t.ex=b.x+b.width/2;t.ey=b.y+b.height*0.5;
+    if(best.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(best.landmarks.getLeftEye()),rc=mid(best.landmarks.getRightEye());
+     const a=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+     if(Math.abs(a)<0.5)t.angle=a;
+    }
+   }
+  }catch(e){}
+ }
+ const PAD=2.7,pw=Math.ceil(t.erx*2*PAD),ph=Math.ceil(t.ery*2*PAD);
+ const pc=document.createElement('canvas');pc.width=pw;pc.height=ph;
+ const px=pc.getContext('2d');
+ px.translate(pw/2,ph/2);px.rotate(-t.angle);
+ px.drawImage(ai,-t.ex,-t.ey);
+ px.setTransform(1,0,0,1,0,0);
+ const cx=pw/2,cy=ph/2,erx=t.erx,ery=t.ery;
+ const pre=document.createElement('canvas');pre.width=pw;pre.height=ph;
+ pre.getContext('2d').drawImage(pc,0,0);
+ const pd0=px.getImageData(0,0,pw,ph).data;
+ let fT=null;
+ {let rs=0,gs=0,bs=0,n=0;
+  for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
+   const dx=(x-cx)/erx,dy=(y-cy)/ery;
+   if(dx*dx+dy*dy>0.45)continue;
+   const i=(y*pw+x)*4,r=pd0[i],g=pd0[i+1],b=pd0[i+2];
+   if(0.299*r+0.587*g+0.114*b<45)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>120)fT={r:rs/n,g:gs/n,b:bs/n}}
+ const sc=(erx/s.erx+ery/s.ery)/2;
+ const K=1.50;
+ const sw=Math.max(4,Math.round(s.erx*2*K*sc)),sh=Math.max(4,Math.round(s.ery*2*K*sc));
+ const fc=document.createElement('canvas');fc.width=sw;fc.height=sh;
+ const fx=fc.getContext('2d');
+ fx.translate(sw/2,sh/2);fx.rotate(-s.angle);fx.scale(sc,sc);
+ fx.translate(-s.ex,-s.ey);
+ fx.drawImage(shot,0,0);
+ fx.setTransform(1,0,0,1,0,0);
+ if(fT){
+  const fImg=fx.getImageData(0,0,sw,sh);const dd=fImg.data;
+  const ft2=ringMean(dd,sw,sh,sw/2,sh/2,sw/2*0.62,sh/2*0.62,0.25,0.75,false);
+  if(ft2){
+   const gr=Math.min(1.3,Math.max(0.78,fT.r/Math.max(1,ft2.r)));
+   const gg=Math.min(1.3,Math.max(0.78,fT.g/Math.max(1,ft2.g)));
+   const gb=Math.min(1.3,Math.max(0.78,fT.b/Math.max(1,ft2.b)));
+   const ccx=sw/2,ccy=sh/2;
+   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const dx=(x-ccx)/(sw/2),dy=(y-ccy)/(sh/2);
+    const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+    const w=0.55+0.45*rad;
+    const i=(y*sw+x)*4;
+    dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));
+    dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));
+    dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
+   fx.putImageData(fImg,0,0)}}
+ const layer=document.createElement('canvas');layer.width=pw;layer.height=ph;
+ const lx=layer.getContext('2d');
+ lx.drawImage(fc,cx-sw/2,cy-sh/2);
+ const mk=document.createElement('canvas');mk.width=pw;mk.height=ph;
+ const mctx=mk.getContext('2d');
+ mctx.translate(cx,cy);mctx.scale(erx*0.90,ery*1.02);
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1);
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.72,'rgba(0,0,0,1)');
+ mg.addColorStop(1,'rgba(0,0,0,0)');
+ mctx.fillStyle=mg;mctx.fillRect(-1.15,-1.15,2.3,2.3);
+ mctx.setTransform(1,0,0,1,0,0);
+ mctx.filter='blur(4px)';mctx.drawImage(mk,0,0);mctx.filter='none';
+ lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
+ lx.globalCompositeOperation='source-over';
+ px.drawImage(layer,0,0);
+ if(false){const srcAll=pre.getContext('2d').getImageData(0,0,pw,ph).data;
+  const R0=0.78,R1=1.40;
+  const bx0=Math.max(0,Math.floor(cx-erx*(R1+0.08))),by0=Math.max(0,Math.floor(cy-ery*(R1+0.08)));
+  const bx1=Math.min(pw-1,Math.ceil(cx+erx*(R1+0.08))),by1=Math.min(ph-1,Math.ceil(cy+ery*(R1+0.08)));
+  const wreg=px.createImageData(pw,ph);const d=wreg.data;
+  for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){
+   const dx=(x-cx)/erx,dy=(y-cy)/ery;
+   const tt=Math.sqrt(dx*dx+dy*dy);
+   if(tt<R0)continue;
+   const ux=dx/tt,uy=dy/tt;
+   const R1a=R1-0.11*Math.max(0,-uy)*Math.max(0,-uy);
+   if(tt>R1a)continue;
+   const j=(Math.sin(x*12.9898+y*78.233)*43758.5453)%1;
+   const ts=1.42+(j<0?-j:j)*0.10;
+   const fx2=cx+ux*erx*ts,fy2=cy+uy*ery*ts;
+   const sx0=Math.floor(fx2),sy0=Math.floor(fy2);
+   if(sx0<0||sy0<0||sx0>=pw-1||sy0>=ph-1)continue;
+   const ax=fx2-sx0,ay=fy2-sy0;
+   const i00=(sy0*pw+sx0)*4,i10=(sy0*pw+sx0+1)*4,i01=((sy0+1)*pw+sx0)*4,i11=((sy0+1)*pw+sx0+1)*4;
+   const w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
+   const di=(y*pw+x)*4;
+   let a=Math.min(1,(tt-R0)/0.15)*Math.min(1,(R1a-tt)/0.08);
+   if(uy>0.25)a*=Math.max(0.15,1-(uy-0.25)*1.1);
+   d[di]=srcAll[i00]*w00+srcAll[i10]*w10+srcAll[i01]*w01+srcAll[i11]*w11;
+   d[di+1]=srcAll[i00+1]*w00+srcAll[i10+1]*w10+srcAll[i01+1]*w01+srcAll[i11+1]*w11;
+   d[di+2]=srcAll[i00+2]*w00+srcAll[i10+2]*w10+srcAll[i01+2]*w01+srcAll[i11+2]*w11;
+   d[di+3]=a*255;
+  }
+  const wc=document.createElement('canvas');wc.width=pw;wc.height=ph;
+  wc.getContext('2d').putImageData(wreg,0,0);
+  px.save();px.filter='blur(2.5px)';px.drawImage(wc,0,0);px.restore()}
+ px.save();
+ px.translate(cx,cy);px.scale(erx,ery);
+ const sg=px.createRadialGradient(0,0,0,0,0,1);
+ sg.addColorStop(0.60,'rgba(25,12,4,0)');
+ sg.addColorStop(0.82,'rgba(25,12,4,0.30)');
+ sg.addColorStop(1,'rgba(25,12,4,0)');
+ px.fillStyle=sg;px.fillRect(-1.1,-1.1,2.2,2.2);
+ px.restore();
+ try{window.__dbg={t:{ex:t.ex,ey:t.ey,erx:t.erx,ery:t.ery,angle:t.angle},s:{ex:s.ex,ey:s.ey,erx:s.erx,ery:s.ery,angle:s.angle},fT:fT,pre:pre.toDataURL('image/jpeg',0.9),post:pc.toDataURL('image/jpeg',0.9),srclayer:fc.toDataURL('image/jpeg',0.9)}}catch(e){}
+ const out=document.createElement('canvas');out.width=W;out.height=H;
+ const ox=out.getContext('2d');
+ ox.drawImage(ai,0,0,W,H);
+ ox.translate(t.ex,t.ey);ox.rotate(t.angle);
+ ox.drawImage(pc,-pw/2,-ph/2);
+ ox.setTransform(1,0,0,1,0,0);
+ return out.toDataURL('image/jpeg',0.92);
+}
+function downscaleImg(url,maxW,q){
+ return new Promise(res=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,maxW/im.width);const cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',q))};im.onerror=()=>res(url);im.src=url});
+}
+
+async function detectFaceLA(img){
+ const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+ try{
+  await loadFaceApi();
+  const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.5}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.35});
+  let d=null;
+  try{d=await faceapi.detectSingleFace(img,opts).withFaceLandmarks()}catch(e2){}
+  if(!d){const ds=await faceapi.detectAllFaces(img,opts);if(ds&&ds.length){ds.sort((a,b)=>b.box.width*b.box.height-a.box.width*a.box.height);d={detection:ds[0],landmarks:null}}}
+  if(d&&d.detection){
+   const b=d.detection.box;
+   if(b.width>iw*0.05&&b.height>ih*0.05){
+    let angle=0;
+    if(d.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(d.landmarks.getLeftEye()),rc=mid(d.landmarks.getRightEye());
+     angle=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+    }
+    return {ex:b.x+b.width/2,ey:b.y+b.height*0.50,erx:b.width*0.58,ery:b.height*0.58,angle,detected:true};
+   }
+  }
+ }catch(e){}
+ const e2=await detectFaceE(img);
+ return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
+}
+// v5.3.0 segmentation identity restore: MediaPipe person silhouette mask (hair+face+neck), no selfie background.
+// The bake supplies costume/fur/lighting; the face is composited from the selfie
+// (rotated+scaled via landmark alignment, tone-matched to the scene) and the
+// bake's own fur ring is stretched over the rim so the face sits recessed in the hood.
+async function segmentPerson(img){
+ try{
+  if(!window.__seger){
+   const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+   const fileset=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+   window.__seger=await vision.ImageSegmenter.createFromOptions(fileset,{
+    baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/1/selfie_multiclass_256x256.tflite'},
+    runningMode:'IMAGE',outputCategoryMask:true});
+  }
+  const r=window.__seger.segment(img);
+  if(!r||!r.categoryMask)return null;
+  const cm=r.categoryMask;
+  const w=cm.width,h=cm.height;
+  const data=cm.getAsUint8Array();
+  const out=new Uint8ClampedArray(w*h*4);
+  for(let i=0;i<w*h;i++){
+   const c=data[i];
+   const keep=(c===1||c===2||c===3)?255:0;
+   out[i*4]=out[i*4+1]=out[i*4+2]=255;out[i*4+3]=keep;
+  }
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  cv.getContext('2d').putImageData(new ImageData(out,w,h),0,0);
+  if(cm.close)cm.close();if(r.close)r.close();
+  return cv;
+ }catch(e){return null}
+}
+async function identityRestore(bakedUrl,shotUrl,c0){
+ const ai=await loadImg(bakedUrl),shot=await loadImg(shotUrl);
+ const W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
+ const s=await detectFaceLA(shot);
+ let t;
+ {const sx=W/c0.w,sy=H/c0.h;
+  t={ex:c0.fx*sx,ey:c0.fy*sy,erx:c0.fw/2*sx*0.92,ery:c0.fh/2*sy*0.92,angle:0,detected:true};
+  try{
+   await loadFaceApi();
+   const opts=_model==='ssd'?new faceapi.SsdMobilenetv1Options({minConfidence:0.4}):new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:0.3});
+   const ds=await faceapi.detectAllFaces(ai,opts).withFaceLandmarks();
+   let best=null,bd=1e9;
+   for(const d of ds){
+    const b=d.detection.box;
+    const bx=b.x+b.width/2,by=b.y+b.height*0.5;
+    const dist=Math.hypot(bx-t.ex,by-t.ey);
+    const okSize=b.width>t.erx*0.9&&b.width<t.erx*3.4;
+    if(okSize&&dist<t.ery*0.6&&dist<bd){bd=dist;best=d}
+   }
+   if(best){
+    const b=best.detection.box;
+    t.ex=b.x+b.width/2;t.ey=b.y+b.height*0.5;
+    if(best.landmarks){
+     const mid=pts=>{let x=0,y=0;for(const q of pts){x+=q.x;y+=q.y}return{x:x/pts.length,y:y/pts.length}};
+     const lc=mid(best.landmarks.getLeftEye()),rc=mid(best.landmarks.getRightEye());
+     const a=Math.atan2(rc.y-lc.y,rc.x-lc.x);
+     if(Math.abs(a)<0.5)t.angle=a;
+    }
+   }
+  }catch(e){}
+ }
+ const PAD=2.7,pw=Math.ceil(t.erx*2*PAD),ph=Math.ceil(t.ery*2*PAD);
+ const pc=document.createElement('canvas');pc.width=pw;pc.height=ph;
+ const px=pc.getContext('2d');
+ px.translate(pw/2,ph/2);px.rotate(-t.angle);
+ px.drawImage(ai,-t.ex,-t.ey);
+ px.setTransform(1,0,0,1,0,0);
+ const cx=pw/2,cy=ph/2,erx=t.erx,ery=t.ery;
+ const pd0=px.getImageData(0,0,pw,ph).data;
+ let fT=null;
+ {let rs=0,gs=0,bs=0,n=0;
+  for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
+   const dx=(x-cx)/erx,dy=(y-cy)/ery;
+   if(dx*dx+dy*dy>0.45)continue;
+   const i=(y*pw+x)*4,r=pd0[i],g=pd0[i+1],b=pd0[i+2];
+   if(0.299*r+0.587*g+0.114*b<45)continue;
+   rs+=r;gs+=g;bs+=b;n++}
+  if(n>120)fT={r:rs/n,g:gs/n,b:bs/n}}
+ // source face layer in patch scale, rotated upright, anisotropic ellipse mapping
+ const scx=erx/s.erx,scy=ery/s.ery;
+ const K=1.50;
+ const sw=Math.max(4,Math.round(s.erx*2*K*scx)),sh=Math.max(4,Math.round(s.ery*2*K*scy));
+ const fc=document.createElement('canvas');fc.width=sw;fc.height=sh;
+ const fx=fc.getContext('2d');
+ fx.translate(sw/2,sh/2);fx.rotate(-s.angle);fx.scale(scx,scy);
+ fx.translate(-s.ex,-s.ey);
+ fx.drawImage(shot,0,0);
+ fx.setTransform(1,0,0,1,0,0);
+ // person mask from segmentation, same transform into patch space
+ const segCv=await segmentPerson(shot);
+ if(segCv){
+  const mc=document.createElement('canvas');mc.width=sw;mc.height=sh;
+  const mx=mc.getContext('2d');
+  mx.translate(sw/2,sh/2);mx.rotate(-s.angle);mx.scale(scx,scy);
+  mx.translate(-s.ex,-s.ey);
+  const iw=shot.naturalWidth||shot.width,ih=shot.naturalHeight||shot.height;
+  mx.drawImage(segCv,0,0,iw,ih);
+  mx.setTransform(1,0,0,1,0,0);
+  // erode semi-transparent fringe: square the alpha, then feather
+  mx.globalCompositeOperation='destination-in';
+  mx.drawImage(mc,0,0);
+  mx.globalCompositeOperation='source-over';
+  const mc2=document.createElement('canvas');mc2.width=sw;mc2.height=sh;
+  const mx2=mc2.getContext('2d');
+  mx2.filter='blur(5px)';mx2.drawImage(mc,0,0);mx2.filter='none';
+  fx.globalCompositeOperation='destination-in';
+  fx.drawImage(mc2,0,0);
+  fx.globalCompositeOperation='source-over';
+ }else{
+  // fallback: loose elliptical guard if segmentation unavailable
+  const mk=document.createElement('canvas');mk.width=sw;mk.height=sh;
+  const mctx=mk.getContext('2d');
+  mctx.translate(sw/2,sh/2);mctx.scale(sw/2*0.62,sh/2*0.62);
+  const mg=mctx.createRadialGradient(0,0,0,0,0,1);
+  mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.7,'rgba(0,0,0,1)');
+  mg.addColorStop(1,'rgba(0,0,0,0)');
+  mctx.fillStyle=mg;mctx.fillRect(-1.6,-1.6,3.2,3.2);
+  mctx.setTransform(1,0,0,1,0,0);
+  mctx.filter='blur(3px)';mctx.drawImage(mk,0,0);mctx.filter='none';
+  fx.globalCompositeOperation='destination-in';fx.drawImage(mk,0,0);
+  fx.globalCompositeOperation='source-over';
+ }
+ // tone match the real face to the scene lighting
+ if(fT){
+  const fImg=fx.getImageData(0,0,sw,sh);const dd=fImg.data;
+  const ft2=ringMean(dd,sw,sh,sw/2,sh/2,sw/2*0.62,sh/2*0.62,0.25,0.75,false);
+  if(ft2){
+   const gr=Math.min(1.3,Math.max(0.78,fT.r/Math.max(1,ft2.r)));
+   const gg=Math.min(1.3,Math.max(0.78,fT.g/Math.max(1,ft2.g)));
+   const gb=Math.min(1.3,Math.max(0.78,fT.b/Math.max(1,ft2.b)));
+   const ccx=sw/2,ccy=sh/2;
+   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const dx=(x-ccx)/(sw/2),dy=(y-ccy)/(sh/2);
+    const rad=Math.min(1,Math.sqrt(dx*dx+dy*dy));
+    const w=0.55+0.45*rad;
+    const i=(y*sw+x)*4;
+    dd[i]=Math.min(255,dd[i]*(1+(gr-1)*w));
+    dd[i+1]=Math.min(255,dd[i+1]*(1+(gg-1)*w));
+    dd[i+2]=Math.min(255,dd[i+2]*(1+(gb-1)*w))}
+   fx.putImageData(fImg,0,0)}}
+ // paste with a loose elliptical guard (kills far outliers only; silhouette does the real work)
+ const layer=document.createElement('canvas');layer.width=pw;layer.height=ph;
+ const lx=layer.getContext('2d');
+ lx.drawImage(fc,cx-sw/2,cy-sh/2);
+ const mk=document.createElement('canvas');mk.width=pw;mk.height=ph;
+ const mctx=mk.getContext('2d');
+ mctx.translate(cx,cy);mctx.scale(erx*1.30,ery*1.30);
+ const mg=mctx.createRadialGradient(0,0,0,0,0,1);
+ mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.85,'rgba(0,0,0,1)');
+ mg.addColorStop(1,'rgba(0,0,0,0)');
+ mctx.fillStyle=mg;mctx.fillRect(-1.15,-1.15,2.3,2.3);
+ mctx.setTransform(1,0,0,1,0,0);
+ mctx.filter='blur(4px)';mctx.drawImage(mk,0,0);mctx.filter='none';
+ lx.globalCompositeOperation='destination-in';lx.drawImage(mk,0,0);
+ lx.globalCompositeOperation='source-over';
+ px.drawImage(layer,0,0);
+ // soft inner shadow for depth
+ px.save();
+ px.translate(cx,cy);px.scale(erx,ery);
+ const sg=px.createRadialGradient(0,0,0,0,0,1);
+ sg.addColorStop(0.60,'rgba(25,12,4,0)');
+ sg.addColorStop(0.82,'rgba(25,12,4,0.30)');
+ sg.addColorStop(1,'rgba(25,12,4,0)');
+ px.fillStyle=sg;px.fillRect(-1.1,-1.1,2.2,2.2);
+ px.restore();
+ try{window.__dbg={t:{ex:t.ex,ey:t.ey,erx:t.erx,ery:t.ery,angle:t.angle},s:{ex:s.ex,ey:s.ey,erx:s.erx,ery:s.ery,angle:s.angle},fT:fT,seg:!!segCv,post:pc.toDataURL('image/jpeg',0.9),srclayer:fc.toDataURL('image/jpeg',0.9)}}catch(e){}
+ const out=document.createElement('canvas');out.width=W;out.height=H;
+ const ox=out.getContext('2d');
+ ox.drawImage(ai,0,0,W,H);
+ ox.translate(t.ex,t.ey);ox.rotate(t.angle);
+ ox.drawImage(pc,-pw/2,-ph/2);
+ ox.setTransform(1,0,0,1,0,0);
+ return out.toDataURL('image/jpeg',0.92);
+}
+async function processFace(pi,url){
+ const p=S.players[pi];
+ p.shot=url;p.det=null;p.adj={x:0,y:0,s:1};p.aiEdit=false;
+ const ov=document.createElement('div');
+ ov.className='roundov';
+ ov.innerHTML='<div class="rt" style="margin-top:0">ה-AI מלביש אותך... ✨</div><div class="rs">יכול לקחת דקה-שתיים</div>';
+ document.body.appendChild(ov);
+ const c0b=charOf(p);
+ let baked=null;
+ if(c0b){
+  for(let tries=0;tries<3&&!baked;tries++){
+   const ai=await aiFaceBake(c0b,url).catch(()=>null);
+   if(ai&&await faceOk(ai,c0b))baked=ai;
+  }
+ }
+ if(baked){
+  const rst=await identityRestore(baked,url,c0b).catch(()=>null);
+  const small=await downscaleImg(rst||baked,720,0.87);
+  p.comp=small;p.aiEdit=true;
+  const im=await loadImg(small);
+  const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+  chip.getContext('2d').drawImage(im,im.width*0.28,0,im.width*0.44,im.height*0.2,0,0,96,96);
+  p.face=chip.toDataURL('image/jpeg',0.85);
+  ov.remove();renderAdjust(pi);return;
+ }
+ ov.querySelector('.rt').textContent='מזהה את הפנים...';
+ ov.querySelector('.rs').textContent='שנייה אחת';
+ const c0=charOf(p);
+ const hy2=c0?await hybridRealFace(c0.id+'.webp',url,c0.id).catch(()=>null):null;
+ if(hy2){
+  const small=await downscaleImg(hy2,720,0.87);
+  p.comp=small;
+  const im=await loadImg(small);
+  const chip=document.createElement('canvas');chip.width=96;chip.height=96;
+  chip.getContext('2d').drawImage(im,im.width*0.28,0,im.width*0.44,im.height*0.2,0,0,96,96);
+  p.face=chip.toDataURL('image/jpeg',0.85);
+  ov.remove();renderAdjust(pi);return;
+ }
+ const img=await loadImg(url);
+ p.det=await detectFaceE(img);
+ await composite(pi);
+ ov.remove();
+ renderAdjust(pi);
+}
+/* ---------- overrides ---------- */
+function charBox(p,cls){
+ const c=charOf(p);if(!c)return'';
+ const dc=cls==='dance'?'dance d-'+c.id:(cls||'');
+ if(p.comp)return `<div class="charbox ${dc}"><img class="cimg" src="${p.comp}" alt="${c.name}"></div>`;
+ const st=`left:${c.fx/c.w*100}%;top:${c.fy/c.h*100}%;width:${c.fw/c.w*100}%;aspect-ratio:${c.fw}/${c.fh}`;
+ return `<div class="charbox ${dc}"><img class="cimg" src="${c.id}.webp" alt="${c.name}"><div class="face empty" style="${st}"></div></div>`;
+}
+function renderAdjust(pi){
+ S.screen='adj'+pi;
+ const p=S.players[pi],c=charOf(p);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">הפנים על הדמות!</h1></div>
+  <div class="sub">${p.aiEdit?'נוצר עם AI ✨ - אם לא אוהבים, אפשר לנסות שוב':p.det?'זיהינו והדבקנו אוטומטית - אפשר ללטש בגרירה':'לא זיהינו פנים - סדרו ידנית בגרירה'}</div>
+  <div class="adjwrap" id="aw"><img id="compImg" src="${p.comp}" style="width:100%;display:block;touch-action:none;cursor:grab"></div>
+  ${p.aiEdit?'':'<div class="zoomrow"><span>זום</span><input type="range" id="zm" min="0.6" max="2.2" step="0.01" value="'+p.adj.s+'"></div>'}
+  <button class="cta" id="ok">יאללה, מושלם</button>
+  ${p.aiEdit?'<button class="linkbtn" id="reai">נסה שוב עם AI</button>':''}
+  <button class="linkbtn" id="re">צלם / העלה מחדש</button>`;
+ const im=document.getElementById('compImg');
+ if(!p.aiEdit){
+ let drag=null,pending=false;
+ const refresh=async()=>{if(pending)return;pending=true;await composite(pi);im.src=p.comp;pending=false};
+ im.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ax:p.adj.x,ay:p.adj.y};im.setPointerCapture(e.pointerId)};
+ im.onpointermove=e=>{
+  if(!drag)return;
+  const r=im.getBoundingClientRect();
+  p.adj.x=drag.ax+(e.clientX-drag.x)/r.width*100*(c.w/c.fw);
+  p.adj.y=drag.ay+(e.clientY-drag.y)/r.height*100*(c.h/c.fh);
+  refresh();
+ };
+ im.onpointerup=()=>drag=null;
+ document.getElementById('zm').oninput=e=>{p.adj.s=+e.target.value;refresh()};
+ }
+ document.getElementById('ok').onclick=()=>{save();pi===0?renderVeil(1):renderMenu()};
+ const reai=document.getElementById('reai');if(reai)reai.onclick=()=>processFace(pi,p.shot);
+ document.getElementById('re').onclick=()=>renderCam(pi);
+}
+async function renderCam(pi){
+ S.screen='cam'+pi;
+ const c=charOf(S.players[pi]);
+ app.innerHTML=`
+  <div class="hdr"><h1 style="font-size:24px">צלם סלפי</h1></div>
+  <div class="sub">הפנים שלך יתלבשו על <b style="color:#f6c445">${c.name}</b> - ה-AI עורך אוטומטית!</div>
+  <div class="camwrap"><video id="pv" playsinline autoplay muted></video></div>
+  <div class="shoot"><button class="shutter" id="sh" aria-label="צלם"></button></div>
+  <button class="linkbtn" id="up">או העלה תמונה מהגלריה</button>
+  <div class="camhint" id="err"></div>`;
+ const v=document.getElementById('pv');
+ try{
+  stopCam();
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:1280}},audio:false});
+  v.srcObject=stream;
+ }catch(e){
+  document.getElementById('err').textContent='המצלמה לא זמינה כאן - אפשר להעלות תמונה מהגלריה';
+  document.getElementById('sh').style.display='none';
+ }
+ document.getElementById('sh').onclick=()=>{
+  const cv=document.getElementById('cap');
+  const vw=v.videoWidth||640,vh=v.videoHeight||480;
+  const side=Math.min(vw,vh);
+  cv.width=side;cv.height=side;
+  const ctx=cv.getContext('2d');
+  ctx.translate(side,0);ctx.scale(-1,1);
+  ctx.drawImage(v,(vw-side)/2,(vh-side)/2,side,side,0,0,side,side);
+  const url=cv.toDataURL('image/jpeg',.85);
+  stopCam();processFace(pi,url);
+ };
+ document.getElementById('up').onclick=()=>{
+  const f=document.getElementById('filepick');
+  f.onchange=()=>{
+   if(!f.files[0])return;
+   const r=new FileReader();
+   r.onload=()=>{shrink(r.result,url=>{stopCam();processFace(pi,url)})};
+   r.readAsDataURL(f.files[0]);f.value='';
+  };
+  f.click();
+ };
+}
+function shrink(url,cb){
+ const im=new Image();
+ im.onload=()=>{
+  const k=Math.min(1,760/Math.max(im.width,im.height));
+  const cv=document.getElementById('cap');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+  cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+  cb(cv.toDataURL('image/jpeg',.85));
+ };
+ im.src=url;
+}
+function save(){
+ try{localStorage.setItem('facebattle',JSON.stringify({players:[{name:S.players[0].name,char:S.players[0].char,comp:S.players[0].comp,face:S.players[0].face,shot:S.players[0].shot,det:S.players[0].det,adj:S.players[0].adj},{name:S.players[1].name,char:S.players[1].char,comp:S.players[1].comp,face:S.players[1].face,shot:S.players[1].shot,det:S.players[1].det,adj:S.players[1].adj}],score:S.score,game:S.game,round:S.round}))}catch(e){}
+}
+
+/* ---------- init ---------- */
+window.__g={S,renderMenu,renderSelect,renderAdjust,renderWin,endRound,startTttRound,startRpsRound};
+(function init(){
+ if(S.players[1].comp&&S.players[1].char){renderMenu()}
+ else if(S.players[0].comp&&S.players[0].char){renderSelect(1)}
+ else{renderSelect(0)}
+})();
+</script>
+</body>
+</html>
