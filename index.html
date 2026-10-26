@@ -1333,7 +1333,7 @@ async function detectFaceLA(img){
  const e2=await detectFaceE(img);
  return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
 }
-// v5.3.0 segmentation identity restore: MediaPipe person silhouette mask (hair+face+neck), no selfie background.
+// v5.3.2 segmentation identity restore: silhouette mask + neck occlusion fade + wide bake-face tracking.
 // The bake supplies costume/fur/lighting; the face is composited from the selfie
 // (rotated+scaled via landmark alignment, tone-matched to the scene) and the
 // bake's own fur ring is stretched over the rim so the face sits recessed in the hood.
@@ -1364,9 +1364,12 @@ async function segmentPerson(img){
  }catch(e){return null}
 }
 async function identityRestore(bakedUrl,shotUrl,c0){
+ window.__irProg=[['enter',Date.now()]];
  const ai=await loadImg(bakedUrl),shot=await loadImg(shotUrl);
+ window.__irProg.push(['loaded',Date.now()]);
  const W=ai.naturalWidth||ai.width,H=ai.naturalHeight||ai.height;
  const s=await detectFaceLA(shot);
+ window.__irProg.push(['shotDet',Date.now()]);
  let t;
  {const sx=W/c0.w,sy=H/c0.h;
   t={ex:c0.fx*sx,ey:c0.fy*sy,erx:c0.fw/2*sx*0.92,ery:c0.fh/2*sy*0.92,angle:0,detected:true};
@@ -1379,8 +1382,8 @@ async function identityRestore(bakedUrl,shotUrl,c0){
     const b=d.detection.box;
     const bx=b.x+b.width/2,by=b.y+b.height*0.5;
     const dist=Math.hypot(bx-t.ex,by-t.ey);
-    const okSize=b.width>t.erx*0.9&&b.width<t.erx*3.4;
-    if(okSize&&dist<t.ery*0.6&&dist<bd){bd=dist;best=d}
+    const okSize=b.width>t.erx*0.5&&b.width<t.erx*3.4; // v5.3.2
+    if(okSize&&dist<t.ery*3.0&&dist<bd){bd=dist;best=d} // v5.3.2: follow klein head movement
    }
    if(best){
     const b=best.detection.box;
@@ -1394,6 +1397,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
    }
   }catch(e){}
  }
+ window.__irProg.push(['bakeScan',Date.now()]);
  const PAD=2.7,pw=Math.ceil(t.erx*2*PAD),ph=Math.ceil(t.ery*2*PAD);
  const pc=document.createElement('canvas');pc.width=pw;pc.height=ph;
  const px=pc.getContext('2d');
@@ -1422,7 +1426,9 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  fx.drawImage(shot,0,0);
  fx.setTransform(1,0,0,1,0,0);
  // person mask from segmentation, same transform into patch space
+ window.__irProg.push(['preSeg',Date.now()]);
  const segCv=await segmentPerson(shot);
+ window.__irProg.push(['seg',Date.now()]);
  if(segCv){
   const mc=document.createElement('canvas');mc.width=sw;mc.height=sh;
   const mx=mc.getContext('2d');
@@ -1434,6 +1440,13 @@ async function identityRestore(bakedUrl,shotUrl,c0){
   // erode semi-transparent fringe: square the alpha, then feather
   mx.globalCompositeOperation='destination-in';
   mx.drawImage(mc,0,0);
+  // v5.3.2 neck occlusion: fade mask below jawline so costume covers the neck
+  const _sc=s.ery*scx; // patch-space half face height (scx==scy uniform)
+  const _g=mx.createLinearGradient(0,0,0,sh);
+  const _y0=(sh/2+_sc*0.85)/sh,_y1=(sh/2+_sc*1.35)/sh;
+  _g.addColorStop(0,'rgba(0,0,0,1)');_g.addColorStop(_y0,'rgba(0,0,0,1)');
+  _g.addColorStop(_y1,'rgba(0,0,0,0)');_g.addColorStop(1,'rgba(0,0,0,0)');
+  mx.fillStyle=_g;mx.fillRect(0,0,sw,sh);
   mx.globalCompositeOperation='source-over';
   const mc2=document.createElement('canvas');mc2.width=sw;mc2.height=sh;
   const mx2=mc2.getContext('2d');
