@@ -1333,7 +1333,7 @@ async function detectFaceLA(img){
  const e2=await detectFaceE(img);
  return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
 }
-// v5.3.3 segmentation identity restore: silhouette mask + neck occlusion + wide face tracking + seg warmup/timeout.
+// v5.3.4 segmentation identity restore: SEG_WAIT sentinel + retry, no silent degraded fallback.
 // v5.3.3: background warmup + bounded wait, so a fresh session never looks stuck
 function __initSeger(){
  if(!window.__segerP){
@@ -1351,7 +1351,7 @@ function __initSeger(){
 }
 async function segmentPerson(img){
  try{
-  const sg=window.__seger||await Promise.race([__initSeger(),new Promise(r=>setTimeout(()=>r(null),20000))]);
+  const sg=window.__seger||await Promise.race([__initSeger(),new Promise(r=>setTimeout(()=>r(null),60000))]);
   if(!sg)return null;
   const r=sg.segment(img);
   if(!r||!r.categoryMask)return null;
@@ -1436,6 +1436,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  window.__irProg.push(['preSeg',Date.now()]);
  const segCv=await segmentPerson(shot);
  window.__irProg.push(['seg',Date.now()]);
+ if(!segCv)return 'SEG_WAIT'; // v5.3.4: never silently serve degraded output
  if(segCv){
   const mc=document.createElement('canvas');mc.width=sw;mc.height=sh;
   const mx=mc.getContext('2d');
@@ -1461,19 +1462,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
   fx.globalCompositeOperation='destination-in';
   fx.drawImage(mc2,0,0);
   fx.globalCompositeOperation='source-over';
- }else{
-  // fallback: loose elliptical guard if segmentation unavailable
-  const mk=document.createElement('canvas');mk.width=sw;mk.height=sh;
-  const mctx=mk.getContext('2d');
-  mctx.translate(sw/2,sh/2);mctx.scale(sw/2*0.62,sh/2*0.62);
-  const mg=mctx.createRadialGradient(0,0,0,0,0,1);
-  mg.addColorStop(0,'rgba(0,0,0,1)');mg.addColorStop(0.7,'rgba(0,0,0,1)');
-  mg.addColorStop(1,'rgba(0,0,0,0)');
-  mctx.fillStyle=mg;mctx.fillRect(-1.6,-1.6,3.2,3.2);
-  mctx.setTransform(1,0,0,1,0,0);
-  mctx.filter='blur(3px)';mctx.drawImage(mk,0,0);mctx.filter='none';
-  fx.globalCompositeOperation='destination-in';fx.drawImage(mk,0,0);
-  fx.globalCompositeOperation='source-over';
+
  }
  // tone match the real face to the scene lighting
  if(fT){
@@ -1528,6 +1517,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  return out.toDataURL('image/jpeg',0.92);
 }
 try{__initSeger()}catch(e){}
+try{__initSeger()}catch(e){}
 async function processFace(pi,url){
  const p=S.players[pi];
  p.shot=url;p.det=null;p.adj={x:0,y:0,s:1};p.aiEdit=false;
@@ -1544,7 +1534,21 @@ async function processFace(pi,url){
   }
  }
  if(baked){
-  const rst=await identityRestore(baked,url,c0b).catch(()=>null);
+  let rst=await identityRestore(baked,url,c0b).catch(()=>null);
+  if(rst==='SEG_WAIT'){
+   ov.querySelector('.rt').textContent='עוד רגע, מתכונן... ⏳';
+   ov.querySelector('.rs').textContent='בפעם הראשונה זה לוקח קצת זמן';
+   for(let t=0;t<2&&rst==='SEG_WAIT';t++){
+    await new Promise(r=>setTimeout(r,15000));
+    rst=await identityRestore(baked,url,c0b).catch(()=>null);
+   }
+   if(rst==='SEG_WAIT'){
+    ov.querySelector('.rt').textContent='הטעינה איטית היום 😅';
+    ov.querySelector('.rs').textContent='סגור ונסה שוב בעוד דקה';
+    ov.style.cursor='pointer';ov.onclick=()=>ov.remove();
+    return;
+   }
+  }
   const small=await downscaleImg(rst||baked,720,0.87);
   p.comp=small;p.aiEdit=true;
   const im=await loadImg(small);
