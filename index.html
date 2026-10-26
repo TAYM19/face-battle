@@ -1412,7 +1412,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
    rs+=r;gs+=g;bs+=b;n++}
   if(n>120)fT={r:rs/n,g:gs/n,b:bs/n}}
  // source face layer in patch scale, rotated upright, anisotropic ellipse mapping
- const scx=erx/s.erx,scy=ery/s.ery;
+ const scx=Math.sqrt((erx/s.erx)*(ery/s.ery)),scy=scx; // v5.3.1 uniform scale - no feature distortion
  const K=1.50;
  const sw=Math.max(4,Math.round(s.erx*2*K*scx)),sh=Math.max(4,Math.round(s.ery*2*K*scy));
  const fc=document.createElement('canvas');fc.width=sw;fc.height=sh;
