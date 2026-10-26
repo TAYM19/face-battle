@@ -1333,20 +1333,27 @@ async function detectFaceLA(img){
  const e2=await detectFaceE(img);
  return {ex:e2.ex,ey:e2.ey,erx:e2.erx,ery:e2.ery,angle:0,detected:false};
 }
-// v5.3.2 segmentation identity restore: silhouette mask + neck occlusion fade + wide bake-face tracking.
-// The bake supplies costume/fur/lighting; the face is composited from the selfie
-// (rotated+scaled via landmark alignment, tone-matched to the scene) and the
-// bake's own fur ring is stretched over the rim so the face sits recessed in the hood.
-async function segmentPerson(img){
- try{
-  if(!window.__seger){
+// v5.3.3 segmentation identity restore: silhouette mask + neck occlusion + wide face tracking + seg warmup/timeout.
+// v5.3.3: background warmup + bounded wait, so a fresh session never looks stuck
+function __initSeger(){
+ if(!window.__segerP){
+  window.__segerP=(async()=>{
    const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
    const fileset=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
-   window.__seger=await vision.ImageSegmenter.createFromOptions(fileset,{
+   const sg=await vision.ImageSegmenter.createFromOptions(fileset,{
     baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/1/selfie_multiclass_256x256.tflite'},
     runningMode:'IMAGE',outputCategoryMask:true});
-  }
-  const r=window.__seger.segment(img);
+   window.__seger=sg; return sg;
+  })();
+  window.__segerP.catch(()=>{window.__segerP=null});
+ }
+ return window.__segerP;
+}
+async function segmentPerson(img){
+ try{
+  const sg=window.__seger||await Promise.race([__initSeger(),new Promise(r=>setTimeout(()=>r(null),20000))]);
+  if(!sg)return null;
+  const r=sg.segment(img);
   if(!r||!r.categoryMask)return null;
   const cm=r.categoryMask;
   const w=cm.width,h=cm.height;
@@ -1520,6 +1527,7 @@ async function identityRestore(bakedUrl,shotUrl,c0){
  ox.setTransform(1,0,0,1,0,0);
  return out.toDataURL('image/jpeg',0.92);
 }
+try{__initSeger()}catch(e){}
 async function processFace(pi,url){
  const p=S.players[pi];
  p.shot=url;p.det=null;p.adj={x:0,y:0,s:1};p.aiEdit=false;
